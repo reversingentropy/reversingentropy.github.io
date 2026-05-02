@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keyword Networks at NTU - Ashwin Nair</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --border: #232323;
+    --text: #e8e4dc;
+    --muted: #6b6760;
+    --accent: #c8b89a;
+    --accent2: #7ec8a4;
+    --accent3: #c8847e;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.25rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  nav.scrolled {
+    border-color: var(--border);
+    background: rgba(14,14,14,0.92);
+    backdrop-filter: blur(12px);
+  }
+  .nav-left { display: flex; align-items: center; gap: 1.5rem; }
+  .nav-back {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--accent); }
+  .nav-back::before { content: '← '; }
+  .nav-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .nav-case-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 0.2rem 0.6rem;
+  }
+  .case-hero {
+    padding: 10rem 3rem 5rem;
+    max-width: 900px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.8s ease forwards 0.2s;
+  }
+  .case-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .case-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 2rem;
+    height: 1px;
+    background: var(--accent2);
+  }
+  .case-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+  .case-title em { font-style: italic; color: var(--accent); }
+  .case-subtitle {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 55ch;
+    line-height: 1.8;
+  }
+  .stat-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 0 3rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.5s;
+  }
+  .stat-bar-cell { background: var(--bg); padding: 1.5rem 2rem; }
+  .stat-bar-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .stat-bar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .case-content {
+    max-width: 900px;
+    padding: 0 3rem;
+    margin: 0 auto;
+  }
+  .case-section {
+    padding: 5rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .case-section:first-child { border-top: none; padding-top: 4rem; }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .section-label::before {
+    content: '';
+    display: inline-block;
+    width: 1.5rem;
+    height: 1px;
+    background: var(--accent2);
+  }
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+  }
+  p {
+    font-size: 1rem;
+    color: var(--muted);
+    line-height: 1.85;
+    margin-bottom: 1.25rem;
+    max-width: 65ch;
+  }
+  p strong { color: var(--accent); font-weight: 500; }
+  p:last-child { margin-bottom: 0; }
+
+  /* PIPELINE */
+  .pipeline {
+    margin: 3rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .pipeline-stage {
+    background: var(--bg);
+    padding: 2rem 2.5rem;
+    display: grid;
+    grid-template-columns: 2.5rem 1fr auto;
+    gap: 2rem;
+    align-items: start;
+    transition: background 0.2s;
+  }
+  .pipeline-stage:hover { background: var(--surface); }
+  .pipeline-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--border);
+    letter-spacing: 0.1em;
+    padding-top: 0.2rem;
+    transition: color 0.2s;
+  }
+  .pipeline-stage:hover .pipeline-num { color: var(--accent); }
+  .pipeline-stage-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.15rem;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .pipeline-stage-desc {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: none;
+    margin: 0;
+  }
+  .pipeline-stage-desc strong { color: var(--accent); font-weight: 500; }
+  .pipeline-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: flex-end;
+    min-width: 110px;
+  }
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .pipeline-connector {
+    background: var(--bg);
+    padding: 0.6rem 2.5rem 0.6rem calc(2.5rem + 2.5rem + 2rem);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    color: var(--border);
+  }
+
+  /* DEGREE TABLE */
+  .degree-table {
+    margin: 2rem 0;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .degree-table table { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 0.78rem; }
+  .degree-table th {
+    background: var(--surface);
+    padding: 0.75rem 1.25rem;
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .degree-table td { padding: 0.65rem 1.25rem; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .degree-table tr:last-child td { border-bottom: none; }
+  .degree-table td:first-child { color: var(--text); }
+  .degree-table td.highlight { color: var(--accent2); }
+  .degree-table tr:hover td { background: var(--surface); }
+
+  /* RESULT GRID */
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+  .result-cell { background: var(--bg); padding: 2rem; }
+  .result-cell-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .result-cell-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.5rem;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .result-cell-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin: 0; max-width: none; }
+
+  /* CALLOUT */
+  .callout {
+    border-left: 2px solid var(--accent);
+    padding: 1.5rem 2rem;
+    background: var(--surface);
+    margin: 2.5rem 0;
+  }
+  .callout p { color: var(--text); font-size: 0.95rem; margin: 0; max-width: none; }
+  .callout-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+  .callout.insight { border-left-color: var(--accent2); }
+  .callout.insight .callout-label { color: var(--accent2); }
+
+  /* THREAD BOX */
+  .thread-box {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 2.5rem;
+    margin: 3rem 0;
+  }
+  .thread-box-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.25rem;
+  }
+  .thread-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .thread-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.25rem;
+    align-items: start;
+  }
+  .thread-year {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    padding-top: 0.1rem;
+    min-width: 40px;
+  }
+  .thread-text {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .thread-text strong { color: var(--text); font-weight: 400; }
+
+  /* CASE NAV */
+  .case-nav {
+    border-top: 1px solid var(--border);
+    padding: 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 5rem;
+  }
+  .case-nav-item { display: flex; flex-direction: column; gap: 0.4rem; text-decoration: none; max-width: 280px; }
+  .case-nav-item.next { align-items: flex-end; text-align: right; }
+  .case-nav-dir {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .case-nav-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--text);
+    transition: color 0.2s;
+  }
+  .case-nav-item:hover .case-nav-title { color: var(--accent); }
+
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .case-hero { padding: 8rem 1.5rem 3rem; }
+    .case-content { padding: 0 1.5rem; }
+    .stat-bar { grid-template-columns: 1fr 1fr; margin: 0 1.5rem; }
+    .pipeline-stage { grid-template-columns: 1fr; gap: 1rem; }
+    .pipeline-tags { flex-direction: row; }
+    .result-grid { grid-template-columns: 1fr; }
+    .thread-item { grid-template-columns: 1fr; gap: 0.25rem; }
+    .case-nav { flex-direction: column; gap: 2rem; padding: 2rem 1.5rem; }
+    .case-nav-item.next { align-items: flex-start; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-left">
+    <a href="index.html" class="nav-back">All work</a>
+    <a href="index.html" class="nav-name">Ashwin Nair</a>
+  </div>
+  <span class="nav-case-label">Case Study</span>
+</nav>
+
+<div class="case-hero">
+  <div class="case-eyebrow">Nanyang Technological University · 2021-2022 · Published</div>
+  <h1 class="case-title">Finding the right<br>people to solve<br><em>hard problems</em></h1>
+  <p class="case-subtitle">NTU needed to assemble multidisciplinary research teams for grant calls. The existing process was social networks and word of mouth. The question was whether the structure of researcher keywords could do better.</p>
+</div>
+
+<div class="stat-bar">
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">1,284</div>
+    <div class="stat-bar-label">NTU investigators</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">89.7%</div>
+    <div class="stat-bar-label">Investigators identified</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">10/23</div>
+    <div class="stat-bar-label">Full teams correctly found</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">0.80</div>
+    <div class="stat-bar-label">F1 - collaboration model</div>
+  </div>
+</div>
+
+<div class="case-content">
+
+  <div class="case-section reveal">
+    <div class="section-label">The Problem</div>
+    <h2>Building research teams by keyword graph traversal</h2>
+    <p>Large multidisciplinary research teams are how complex problems get solved. But assembling them relies almost entirely on who knows who. A senior researcher attends seminars, spots familiar faces, makes introductions. This works for well-connected labs at the centre of a field. It works poorly at the boundaries - where the most interesting interdisciplinary problems live.</p>
+    <p>NTU wanted a more systematic approach. The task: given the keywords from a grant call, identify a pool of investigators with complementary expertise - including people who don't know each other yet. The hypothesis was that <strong>researchers who share keywords are in related areas, and keywords that co-occur in the same publications form a navigable landscape of scientific topics.</strong></p>
+    <p>The dataset: full bibliographic records for 1,284 NTU investigators downloaded via ORCID and validated against NTU's academic profiles, yielding 101,605 publication records with 284,377 unique author keywords. Ground truth: 23 funded ACE grant teams with their investigator lists and keywords, used to evaluate whether the approach could retroactively identify the right people.</p>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">Two approaches</div>
+    <h2>A keyword graph and a collaboration classifier</h2>
+    <p>Two separate but complementary systems were built. The keyword graph is the core idea. The collaboration classifier is a separate validation layer - can we predict whether two specific researchers are likely to collaborate based on their bibliometric profiles?</p>
+
+    <div class="pipeline">
+      <div class="pipeline-stage">
+        <div class="pipeline-num">01</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">Keyword co-occurrence network</div>
+          <p class="pipeline-stage-desc">Build a keyword-to-keyword network from all author-chosen keywords across 57,395 publication records. Two keywords are linked if they appear together in the same publication's keyword list. The resulting network is a <strong>navigable landscape of scientific topics</strong> - keywords that are conceptually close cluster together, distant concepts are structurally far apart. From any set of seed keywords (extracted from a grant call), traverse the network outward: 0th order keywords match investigators directly, 1st order keywords expand to investigators in adjacent areas who don't use the seed keywords themselves but work in related spaces. This is the mechanism for finding the non-obvious collaborators.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">Co-occurrence matrix</span>
+          <span class="tag">Graph traversal</span>
+          <span class="tag">networkx</span>
+        </div>
+      </div>
+
+      <div class="pipeline-connector">down to degree expansion</div>
+
+      <div class="pipeline-stage">
+        <div class="pipeline-num">02</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">Degree-based investigator expansion</div>
+          <p class="pipeline-stage-desc">Starting from grant call keywords (0th order), retrieve investigators whose publications contain those keywords (0th order investigators). Expand to 1st order keywords - all keywords that appear in publications alongside 0th order keywords but aren't themselves 0th order. Retrieve 1st order investigators - those who use 1st order keywords but not 0th order ones. These are the people in adjacent areas who could add complementary expertise. A second-order filter reduces the 1st order keyword set from 523 to 45 by keeping only keywords linked by multiple 1st order words - pruning noise while preserving genuine adjacencies.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">Bibliometric data</span>
+          <span class="tag">ORCID</span>
+          <span class="tag">Web of Science</span>
+        </div>
+      </div>
+
+      <div class="pipeline-connector">separate track</div>
+
+      <div class="pipeline-stage">
+        <div class="pipeline-num">03</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">Collaboration prediction classifier</div>
+          <p class="pipeline-stage-desc">A separate binary classifier predicting whether two specific investigators are likely to collaborate. Features engineered from bibliometric data: publication counts, citation counts, conference attendance, years since first publication, grants, co-author overlap, <strong>common author keywords</strong> (dot product of keyword vectors), and common references. Trained on 37 known LKCSoM-CoS collaboration pairs and 37 non-collaboration pairs. Shallow feedforward neural network with sigmoid output. Feature importance analysed via Integrated Gradients - common references emerged as the strongest predictor, followed by overlapping author keywords. Achieved <strong>F1 of 0.80</strong> on the test set.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">PyTorch</span>
+          <span class="tag">Feature engineering</span>
+          <span class="tag">Integrated Gradients</span>
+          <span class="tag">Neural network</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="degree-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Degree</th>
+            <th>Keywords to search</th>
+            <th>Investigators found</th>
+            <th>% of 87 total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0th order</td>
+            <td>Grant call keywords directly</td>
+            <td>42</td>
+            <td>48.3%</td>
+          </tr>
+          <tr>
+            <td>1st order (all)</td>
+            <td>18 expanded keywords</td>
+            <td>+17</td>
+            <td>67.8%</td>
+          </tr>
+          <tr>
+            <td>1st order (occurs &gt;1)</td>
+            <td>Filtered 1st order</td>
+            <td>+28</td>
+            <td class="highlight">80.5% (89.7% excl. missing data)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout insight">
+      <div class="callout-label">Why this matters</div>
+      <p>The 0th order search finds the obvious candidates - people who already use the grant's exact keywords. The 1st order expansion finds the non-obvious ones. Those are often the more valuable additions to a multidisciplinary team, because they bring genuinely different expertise rather than more of the same.</p>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">Outcome</div>
+    <h2>89.7% of investigators identified. 10 full teams reconstructed.</h2>
+
+    <div class="result-grid">
+      <div class="result-cell">
+        <div class="result-cell-label">Investigators identified</div>
+        <div class="result-cell-value">89.7%</div>
+        <p class="result-cell-desc">Of 87 investigators across 23 ACE grant teams, excluding 9 with missing bibliographic data. The keyword graph found people the social network approach would have missed.</p>
+      </div>
+      <div class="result-cell">
+        <div class="result-cell-label">Full teams found</div>
+        <div class="result-cell-value">10/23</div>
+        <p class="result-cell-desc">Complete team composition correctly identified for 10 of 23 funded grant teams. Median: 75% of team members found per grant.</p>
+      </div>
+      <div class="result-cell">
+        <div class="result-cell-label">Collaboration F1</div>
+        <div class="result-cell-value">0.80</div>
+        <p class="result-cell-desc">Neural network classifier on 74 investigator pairs (37 collaboration, 37 non-collaboration). Common references and overlapping keywords were the strongest features.</p>
+      </div>
+      <div class="result-cell">
+        <div class="result-cell-label">Publication</div>
+        <div class="result-cell-value">2022</div>
+        <p class="result-cell-desc">Published in collaboration with Assoc Prof Cheong Siew Ann. Full bibliographic records, keyword network construction, and ACE grant validation documented.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">The through-line</div>
+    <h2>Where this work led</h2>
+    <p>This project established a way of thinking about entities and relationships that has shaped every subsequent project. A keyword co-occurrence network is, structurally, a knowledge graph. Investigators are entities. Keywords are properties. Co-authorship is a relationship. The graph traversal logic for finding investigators is conceptually identical to the entity linking logic in the KOS pipeline.</p>
+
+    <div class="thread-box">
+      <div class="thread-box-label">The same problem, different domains</div>
+      <div class="thread-items">
+        <div class="thread-item">
+          <div class="thread-year">2022</div>
+          <div class="thread-text"><strong>NTU:</strong> given a set of seed keywords, traverse a graph to find the right entities (investigators). Keyword co-occurrence as the relationship structure.</div>
+        </div>
+        <div class="thread-item">
+          <div class="thread-year">2024</div>
+          <div class="thread-text"><strong>NLB NEL:</strong> given article text, extract entities and link them to the right nodes in a knowledge graph. Precision-first, same ambiguity-handling logic.</div>
+        </div>
+        <div class="thread-item">
+          <div class="thread-year">2023-25</div>
+          <div class="thread-text"><strong>NLB Entity Resolution:</strong> given 1.45M name records, find the right matching node in a 12M-record reference dataset. Blocking to reduce search space, embeddings for semantic matching.</div>
+        </div>
+        <div class="thread-item">
+          <div class="thread-year">2024-25</div>
+          <div class="thread-text"><strong>KOS Pipeline:</strong> given news articles, extract structured facts and link them to existing entities in NLB's knowledge base. BM25 entity linking, LLM fact extraction, human review.</div>
+        </div>
+      </div>
+    </div>
+
+    <p>The domain shifted from academia to libraries. The scale grew. The methods got more sophisticated. The problem stayed the same: large collections of entities, messy relationships, the need to find meaningful connections reliably. That's not a coincidence - it's the thread.</p>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">Honest reflection</div>
+    <h2>What I'd do differently</h2>
+    <p>The collaboration classifier was trained on 74 pairs, which is a very small dataset for a neural network. A gradient boosted model (XGBoost, which I used later in the entity resolution pipeline) would likely have been more appropriate at this scale - less prone to overfitting, more interpretable, faster to iterate on. The Integrated Gradients approach for feature importance was interesting but added complexity that wasn't strictly necessary given the dataset size.</p>
+    <p>PyTorch Geometric was also tried for the graph-based components - learning representations over the keyword and co-authorship graphs using graph neural networks. It was slower than the classical co-occurrence approach and didn't outperform it. The classical method won. This is actually how a lot of applied ML work ends: you build the more sophisticated thing, benchmark it honestly, and the simpler approach holds up. The publishing constraint is real too - academic venues want novel contributions, and "the classical method is better" is a difficult result to frame as a contribution even when it's the true and useful finding.</p>
+
+    <p>The keyword co-occurrence approach has a more fundamental limitation: it's entirely backward-looking. It finds investigators based on what they've published, not what they're capable of or interested in pursuing. A researcher who has just started moving into a new area won't show up in their keyword profile yet. The paper acknowledges this, but it's the core constraint of any bibliometric approach to team formation.</p>
+    <p>The most practically useful finding - that common references are a stronger collaboration predictor than shared keywords - suggests the interesting follow-on question: can citation network structure predict team formation better than keyword co-occurrence? That's a question worth exploring.</p>
+  </div>
+
+</div>
+
+<div class="case-nav">
+  <a href="nel.html" class="case-nav-item prev">
+    <span class="case-nav-dir">← Previous</span>
+    <span class="case-nav-title">Knowledge Graph Enrichment with NER</span>
+  </a>
+  <a href="index.html" class="case-nav-item next">
+    <span class="case-nav-dir">Back to</span>
+    <span class="case-nav-title">All work</span>
+  </a>
+</div>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 40); });
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => { if (el.isIntersecting) { el.target.classList.add('visible'); observer.unobserve(el.target); } });
+  }, { threshold: 0.08 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

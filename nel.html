@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowledge Graph Enrichment - Ashwin Nair</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --border: #232323;
+    --text: #e8e4dc;
+    --muted: #6b6760;
+    --accent: #c8b89a;
+    --accent2: #7ec8a4;
+    --accent3: #c8847e;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.25rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  nav.scrolled {
+    border-color: var(--border);
+    background: rgba(14,14,14,0.92);
+    backdrop-filter: blur(12px);
+  }
+  .nav-left { display: flex; align-items: center; gap: 1.5rem; }
+  .nav-back {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--accent); }
+  .nav-back::before { content: '← '; }
+  .nav-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .nav-case-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 0.2rem 0.6rem;
+  }
+  .case-hero {
+    padding: 10rem 3rem 5rem;
+    max-width: 900px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.8s ease forwards 0.2s;
+  }
+  .case-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .case-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 2rem;
+    height: 1px;
+    background: var(--accent2);
+  }
+  .case-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+  .case-title em { font-style: italic; color: var(--accent); }
+  .case-subtitle {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 55ch;
+    line-height: 1.8;
+  }
+  .stat-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 0 3rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.5s;
+  }
+  .stat-bar-cell { background: var(--bg); padding: 1.5rem 2rem; }
+  .stat-bar-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .stat-bar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .case-content {
+    max-width: 900px;
+    padding: 0 3rem;
+    margin: 0 auto;
+  }
+  .case-section {
+    padding: 5rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .case-section:first-child { border-top: none; padding-top: 4rem; }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .section-label::before {
+    content: '';
+    display: inline-block;
+    width: 1.5rem;
+    height: 1px;
+    background: var(--accent2);
+  }
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+  }
+  p {
+    font-size: 1rem;
+    color: var(--muted);
+    line-height: 1.85;
+    margin-bottom: 1.25rem;
+    max-width: 65ch;
+  }
+  p strong { color: var(--accent); font-weight: 500; }
+  p:last-child { margin-bottom: 0; }
+
+  /* PIPELINE */
+  .pipeline {
+    margin: 3rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .pipeline-stage {
+    background: var(--bg);
+    padding: 2rem 2.5rem;
+    display: grid;
+    grid-template-columns: 2.5rem 1fr auto;
+    gap: 2rem;
+    align-items: start;
+    transition: background 0.2s;
+  }
+  .pipeline-stage:hover { background: var(--surface); }
+  .pipeline-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--border);
+    letter-spacing: 0.1em;
+    padding-top: 0.2rem;
+    transition: color 0.2s;
+  }
+  .pipeline-stage:hover .pipeline-num { color: var(--accent); }
+  .pipeline-stage-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.15rem;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .pipeline-stage-desc {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: none;
+    margin: 0;
+  }
+  .pipeline-stage-desc strong { color: var(--accent); font-weight: 500; }
+  .pipeline-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: flex-end;
+    min-width: 110px;
+  }
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .pipeline-connector {
+    background: var(--bg);
+    padding: 0.6rem 2.5rem 0.6rem calc(2.5rem + 2.5rem + 2rem);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    color: var(--border);
+  }
+
+  /* OUTCOME GRID */
+  .outcome-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+  .outcome-cell { background: var(--bg); padding: 2rem; }
+  .outcome-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .outcome-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.5rem;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .outcome-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin: 0; max-width: none; }
+
+  /* CALLOUT */
+  .callout {
+    border-left: 2px solid var(--accent);
+    padding: 1.5rem 2rem;
+    background: var(--surface);
+    margin: 2.5rem 0;
+  }
+  .callout p { color: var(--text); font-size: 0.95rem; margin: 0; max-width: none; }
+  .callout-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+  .callout.insight { border-left-color: var(--accent2); }
+  .callout.insight .callout-label { color: var(--accent2); }
+  .callout.warning { border-left-color: var(--accent3); }
+  .callout.warning .callout-label { color: var(--accent3); }
+
+  /* MATCH OUTCOMES */
+  .match-outcomes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+  .match-outcome {
+    background: var(--bg);
+    padding: 1.75rem 2rem;
+    transition: background 0.2s;
+  }
+  .match-outcome:hover { background: var(--surface); }
+  .match-outcome-type {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+  .match-outcome-type.exact { color: var(--accent2); }
+  .match-outcome-type.disambig { color: var(--accent); }
+  .match-outcome-type.eval { color: var(--muted); }
+  .match-outcome-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .match-outcome-desc { font-size: 0.83rem; color: var(--muted); line-height: 1.6; }
+
+  /* CASE NAV */
+  .case-nav {
+    border-top: 1px solid var(--border);
+    padding: 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 5rem;
+  }
+  .case-nav-item { display: flex; flex-direction: column; gap: 0.4rem; text-decoration: none; max-width: 280px; }
+  .case-nav-item.next { align-items: flex-end; text-align: right; }
+  .case-nav-dir {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .case-nav-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--text);
+    transition: color 0.2s;
+  }
+  .case-nav-item:hover .case-nav-title { color: var(--accent); }
+
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .case-hero { padding: 8rem 1.5rem 3rem; }
+    .case-content { padding: 0 1.5rem; }
+    .stat-bar { grid-template-columns: 1fr 1fr; margin: 0 1.5rem; }
+    .pipeline-stage { grid-template-columns: 1fr; gap: 1rem; }
+    .pipeline-tags { flex-direction: row; }
+    .outcome-grid { grid-template-columns: 1fr; }
+    .match-outcomes { grid-template-columns: 1fr; }
+    .case-nav { flex-direction: column; gap: 2rem; padding: 2rem 1.5rem; }
+    .case-nav-item.next { align-items: flex-start; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-left">
+    <a href="index.html" class="nav-back">All work</a>
+    <a href="index.html" class="nav-name">Ashwin Nair</a>
+  </div>
+  <span class="nav-case-label">Case Study</span>
+</nav>
+
+<div class="case-hero">
+  <div class="case-eyebrow">National Library Board · 2024 · Published · DCMI</div>
+  <h1 class="case-title">Enriching a<br>Knowledge Graph<br>with <em>GPT-4 NER</em></h1>
+  <p class="case-subtitle">NLB's Singapore Infopedia encyclopedia has 1,880 articles on Singaporean history, culture, and personalities. Each article mentions entities that aren't in its metadata. A recommender sidebar needs those connections to work. Getting them manually wasn't viable.</p>
+</div>
+
+<div class="stat-bar">
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">0.975</div>
+    <div class="stat-bar-label">Precision on 100 articles</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">2,066</div>
+    <div class="stat-bar-label">True positive entities</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">16K</div>
+    <div class="stat-bar-label">RDF triples added to KG</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">2024</div>
+    <div class="stat-bar-label">Published at DCMI</div>
+  </div>
+</div>
+
+<div class="case-content">
+
+  <div class="case-section reveal">
+    <div class="section-label">The Problem</div>
+    <h2>A recommender that can only see what's in the metadata</h2>
+    <p>Singapore Infopedia is NLB's digital encyclopedia - articles covering the country's history, culture, prominent personalities, and significant events. Each article is accessible via National Library Online and includes a Sidebar: a recommender engine that surfaces related resources from NLB's broader collection.</p>
+    <p>The Sidebar works by traversing relationships in NLB's Linked Data Knowledge Graph. An article about dragon dance connects to resources about Chinese cultural associations, specific events, geographic locations. But those connections only exist if the entities are in the metadata. Most aren't - they're mentioned in the article text but never formally linked.</p>
+    <p>Manual entity tagging across 1,880 articles was not happening at meaningful speed. The question was whether GPT-4 could extract Singaporean entities from article text accurately enough to add directly to the knowledge graph, with a strong preference for <strong>precision over recall</strong> - a wrong connection in the KG is worse than a missed one.</p>
+
+    <div class="callout insight">
+      <div class="callout-label">The precision trade-off</div>
+      <p>If an article about dragon dance mentions 5 entities, and we're only certain about 2, we add 2. Not 5. Missed entities are a gap in coverage. Wrong entities corrupt the graph and mislead the recommender. The decision to optimise precision over recall was deliberate and consequential throughout the design.</p>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">The Approach</div>
+    <h2>Two stages: extract, then match</h2>
+    <p>The pipeline has a clean separation between extraction and linking. GPT-4 does the extraction - identifying what's in the text. String matching does the linking - connecting extracted entities to what's already in the knowledge graph. These are different problems and they need different tools.</p>
+
+    <div class="pipeline">
+      <div class="pipeline-stage">
+        <div class="pipeline-num">01</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">Entity extraction with Chain-of-Thought prompting</div>
+          <p class="pipeline-stage-desc">A Chain-of-Thought prompt guides GPT-4 through a structured process: read the text, identify candidate entities, classify each as Person/Place/Organization, provide reasoning for each classification, output structured JSON. The CoT structure is important - it forces the model to reason explicitly before classifying, which reduces hallucinations and improves adherence to the entity type definitions. Focus is strictly on <strong>Singaporean entities</strong> - non-fictional people, geographic locations, and organisations relevant to Singapore's context. The reasoning step also surfaces false positives: "Jade Emperor" is a deity, not a person; "National Day" is an event, not an organisation.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">GPT-4</span>
+          <span class="tag">Chain-of-Thought</span>
+          <span class="tag">NER</span>
+          <span class="tag">JSON output</span>
+        </div>
+      </div>
+
+      <div class="pipeline-connector">down to entity matching</div>
+
+      <div class="pipeline-stage">
+        <div class="pipeline-num">02</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">Entity matching against NLB Named Authorities</div>
+          <p class="pipeline-stage-desc">Extracted entities are matched against the NLB Named Authorities Dataset - standardised names crucial to Singapore's politics, economy, society, culture, and history. Two preprocessing steps before matching: <strong>qualifier removal</strong> (stripping date qualifiers and role descriptors from entity names to focus on core names) and <strong>alternate name resolution</strong> (all alternate and preferred labels resolve to a single preferred entity through a directed graph - so "LKY", "Mr. Lee", and "Lee Kuan Yew" all route to the same node). String matching then produces three possible outcomes.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">String matching</span>
+          <span class="tag">NLB Named Authorities</span>
+          <span class="tag">RDF</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="match-outcomes">
+      <div class="match-outcome">
+        <div class="match-outcome-type exact">Exact match</div>
+        <div class="match-outcome-title">Update the graph</div>
+        <div class="match-outcome-desc">Unique matches are integrated immediately. Article is linked to matched entity via schema:mentions in the knowledge graph. No human review needed.</div>
+      </div>
+      <div class="match-outcome">
+        <div class="match-outcome-type disambig">Disambiguation</div>
+        <div class="match-outcome-title">Flag for human review</div>
+        <div class="match-outcome-desc">Multiple non-exact string matches require manual intervention to resolve ambiguities. Conservative - would rather flag than guess.</div>
+      </div>
+      <div class="match-outcome">
+        <div class="match-outcome-type eval">No match</div>
+        <div class="match-outcome-title">Evaluate for inclusion</div>
+        <div class="match-outcome-desc">Entities not in the Named Authorities Dataset are evaluated for addition if deemed significant to Singapore's context. These expand the knowledge base.</div>
+      </div>
+    </div>
+
+    <div class="callout warning">
+      <div class="callout-label">What was considered and rejected</div>
+      <p>Automated entity resolution was explicitly evaluated and not deployed. The risk of false positives - unrelated records mistakenly linked - was judged to outweigh the efficiency gain at this stage. This is the same problem the entity resolution pipeline addresses at scale. Here, with a knowledge graph serving a public recommender, caution won.</p>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">Outcome</div>
+    <h2>Precision of 0.975. One hallucination in 100 articles.</h2>
+    <p>Evaluation was conducted on 100 Singapore Infopedia articles. GPT-4 produced 2,066 true positives and 52 false positives - a precision of 0.975. There was one hallucination: an entity that was contextually plausible but not explicitly mentioned in the article text. False negatives (entities missed by the model) were not the primary evaluation focus, consistent with the precision-first design philosophy.</p>
+
+    <div class="outcome-grid">
+      <div class="outcome-cell">
+        <div class="outcome-label">Precision</div>
+        <div class="outcome-value">0.975</div>
+        <p class="outcome-desc">2,066 true positives, 52 false positives. 1 hallucination across 100 articles. Evaluated by the team against source article text.</p>
+      </div>
+      <div class="outcome-cell">
+        <div class="outcome-label">Knowledge graph additions</div>
+        <div class="outcome-value">16K</div>
+        <p class="outcome-desc">RDF triples added to NLB's knowledge graph via schema:mentions relationships, improving cross-resource discovery in the Infopedia Sidebar.</p>
+      </div>
+      <div class="outcome-cell">
+        <div class="outcome-label">Model comparison</div>
+        <div class="outcome-value">GPT-4 &gt; 3.5</div>
+        <p class="outcome-desc">GPT-3.5 failed to follow the JSON output format consistently. GPT-4 adhered reliably - a practical production consideration, not just a benchmark result.</p>
+      </div>
+      <div class="outcome-cell">
+        <div class="outcome-label">Non-reproducibility risk</div>
+        <div class="outcome-value">Real</div>
+        <p class="outcome-desc">The same prompt on the same text on a different day can produce different results. This is documented in the paper as a genuine operational constraint for library systems.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">Honest reflection</div>
+    <h2>What the paper documents and what I'd add</h2>
+    <p>The precision result is strong but the dataset is small - 100 articles out of 1,880 is not a large evaluation set. Generalisation to the full collection, particularly articles covering topics with more ambiguous entity boundaries, is an open question. The paper is clear about this.</p>
+    <p>The non-reproducibility problem is more serious than it sounds for a production library system. Metadata that changes depending on when you run the pipeline isn't metadata you can rely on for a public recommender. The longer-term answer is probably a deterministic NER model fine-tuned on Singapore-specific entity data, rather than a generative model - more predictable, more auditable, cheaper to run at scale. GPT-4 was the right tool for exploration and initial population of the graph. It may not be the right tool for ongoing maintenance.</p>
+    <p>There's also a data flywheel opportunity here that wasn't explored: the entities extracted and verified in this project are now ground truth training data for a future fine-tuned model. The work done here seeds the next phase, if someone picks it up.</p>
+  </div>
+
+</div>
+
+<div class="case-nav">
+  <a href="warc2summary.html" class="case-nav-item prev">
+    <span class="case-nav-dir">← Previous</span>
+    <span class="case-nav-title">warc2summary</span>
+  </a>
+  <a href="ntu.html" class="case-nav-item next">
+    <span class="case-nav-dir">Next →</span>
+    <span class="case-nav-title">Keyword Networks at NTU</span>
+  </a>
+</div>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 40); });
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => { if (el.isIntersecting) { el.target.classList.add('visible'); observer.unobserve(el.target); } });
+  }, { threshold: 0.08 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

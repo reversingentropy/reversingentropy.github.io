@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>warc2summary - Ashwin Nair</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --border: #232323;
+    --text: #e8e4dc;
+    --muted: #6b6760;
+    --accent: #c8b89a;
+    --accent2: #7ec8a4;
+    --accent3: #c8847e;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.25rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  nav.scrolled {
+    border-color: var(--border);
+    background: rgba(14,14,14,0.92);
+    backdrop-filter: blur(12px);
+  }
+  .nav-left { display: flex; align-items: center; gap: 1.5rem; }
+  .nav-back {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--accent); }
+  .nav-back::before { content: '← '; }
+  .nav-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .nav-case-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 0.2rem 0.6rem;
+  }
+  .case-hero {
+    padding: 10rem 3rem 5rem;
+    max-width: 900px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.8s ease forwards 0.2s;
+  }
+  .case-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .case-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 2rem;
+    height: 1px;
+    background: var(--accent2);
+  }
+  .case-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+  .case-title em { font-style: italic; color: var(--accent); }
+  .case-subtitle {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 55ch;
+    line-height: 1.8;
+  }
+  .stat-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 0 3rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.5s;
+  }
+  .stat-bar-cell { background: var(--bg); padding: 1.5rem 2rem; }
+  .stat-bar-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .stat-bar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .case-content {
+    max-width: 900px;
+    padding: 0 3rem;
+    margin: 0 auto;
+  }
+  .case-section {
+    padding: 5rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .case-section:first-child { border-top: none; padding-top: 4rem; }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .section-label::before {
+    content: '';
+    display: inline-block;
+    width: 1.5rem;
+    height: 1px;
+    background: var(--accent2);
+  }
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+  }
+  p {
+    font-size: 1rem;
+    color: var(--muted);
+    line-height: 1.85;
+    margin-bottom: 1.25rem;
+    max-width: 65ch;
+  }
+  p strong { color: var(--accent); font-weight: 500; }
+  p:last-child { margin-bottom: 0; }
+
+  /* COST BREAKDOWN */
+  .cost-box {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 2rem 2.5rem;
+    margin: 2rem 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: center;
+  }
+  .cost-calc {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 2;
+  }
+  .cost-calc .line { display: flex; justify-content: space-between; gap: 3rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; margin-bottom: 0.4rem; }
+  .cost-calc .line:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; color: var(--accent3); font-weight: 500; }
+  .cost-total {
+    text-align: right;
+  }
+  .cost-total-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3rem;
+    color: var(--accent3);
+    line-height: 1;
+  }
+  .cost-total-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.4rem;
+  }
+
+  /* HEURISTICS */
+  .heuristics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+  .heuristic-card {
+    background: var(--bg);
+    padding: 2rem;
+    transition: background 0.2s;
+    position: relative;
+  }
+  .heuristic-card:hover { background: var(--surface); }
+  .heuristic-card.selected::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent2);
+  }
+  .heuristic-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .heuristic-card.selected .heuristic-num { color: var(--accent2); }
+  .heuristic-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+  }
+  .heuristic-desc {
+    font-size: 0.83rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* PIPELINE STAGES */
+  .pipeline {
+    margin: 3rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .pipeline-stage {
+    background: var(--bg);
+    padding: 2rem 2.5rem;
+    display: grid;
+    grid-template-columns: 2.5rem 1fr auto;
+    gap: 2rem;
+    align-items: start;
+    transition: background 0.2s;
+  }
+  .pipeline-stage:hover { background: var(--surface); }
+  .pipeline-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--border);
+    letter-spacing: 0.1em;
+    padding-top: 0.2rem;
+    transition: color 0.2s;
+  }
+  .pipeline-stage:hover .pipeline-num { color: var(--accent); }
+  .pipeline-stage-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.15rem;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .pipeline-stage-desc {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: none;
+    margin: 0;
+  }
+  .pipeline-stage-desc strong { color: var(--accent); font-weight: 500; }
+  .pipeline-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: flex-end;
+    min-width: 110px;
+  }
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* CALLOUT */
+  .callout {
+    border-left: 2px solid var(--accent);
+    padding: 1.5rem 2rem;
+    background: var(--surface);
+    margin: 2.5rem 0;
+  }
+  .callout p { color: var(--text); font-size: 0.95rem; margin: 0; max-width: none; }
+  .callout-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+  .callout.insight { border-left-color: var(--accent2); }
+  .callout.insight .callout-label { color: var(--accent2); }
+  .callout.warning { border-left-color: var(--accent3); }
+  .callout.warning .callout-label { color: var(--accent3); }
+
+  /* RESULTS */
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+  .result-cell { background: var(--bg); padding: 2rem; }
+  .result-cell-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .result-cell-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.5rem;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .result-cell-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin: 0; max-width: none; }
+
+  /* CASE NAV */
+  .case-nav {
+    border-top: 1px solid var(--border);
+    padding: 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 5rem;
+  }
+  .case-nav-item { display: flex; flex-direction: column; gap: 0.4rem; text-decoration: none; max-width: 280px; }
+  .case-nav-item.next { align-items: flex-end; text-align: right; }
+  .case-nav-dir {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .case-nav-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--text);
+    transition: color 0.2s;
+  }
+  .case-nav-item:hover .case-nav-title { color: var(--accent); }
+
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .case-hero { padding: 8rem 1.5rem 3rem; }
+    .case-content { padding: 0 1.5rem; }
+    .stat-bar { grid-template-columns: 1fr 1fr; margin: 0 1.5rem; }
+    .heuristics-grid { grid-template-columns: 1fr; }
+    .pipeline-stage { grid-template-columns: 1fr; gap: 1rem; }
+    .pipeline-tags { flex-direction: row; }
+    .result-grid { grid-template-columns: 1fr; }
+    .cost-box { grid-template-columns: 1fr; }
+    .case-nav { flex-direction: column; gap: 2rem; padding: 2rem 1.5rem; }
+    .case-nav-item.next { align-items: flex-start; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-left">
+    <a href="index.html" class="nav-back">All work</a>
+    <a href="index.html" class="nav-name">Ashwin Nair</a>
+  </div>
+  <span class="nav-case-label">Case Study</span>
+</nav>
+
+<div class="case-hero">
+  <div class="case-eyebrow">National Library Board · 2024 · Published · Open Source</div>
+  <h1 class="case-title">Generating metadata<br>for <em>320,000</em><br>archived websites</h1>
+  <p class="case-subtitle">NLB's Web Archive holds 98,708 unique websites preserved as WARC files. Each needs a title, an abstract, and subject labels. Manual cataloguing at this scale costs $540,000 a year. The question was whether GPT-4o could do it instead.</p>
+</div>
+
+<div class="stat-bar">
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">99.9%</div>
+    <div class="stat-bar-label">API cost reduction</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">98,708</div>
+    <div class="stat-bar-label">Unique websites archived</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">8</div>
+    <div class="stat-bar-label">Cataloguers in evaluation</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">2025</div>
+    <div class="stat-bar-label">Published in ITAL</div>
+  </div>
+</div>
+
+<div class="case-content">
+
+  <div class="case-section reveal">
+    <div class="section-label">The Problem</div>
+    <h2>$540,000 a year in metadata. Or less.</h2>
+    <p>NLB's Singapore Web Archive preserves 320,543 versions of 98,708 unique websites - digital heritage covering Singaporean life, culture, history, organisations, and events. Each archived website needs three metadata fields: a title, an abstract, and SingHeritage subject labels (NLB's local controlled vocabulary). Every field costs cataloguer time.</p>
+
+    <div class="cost-box">
+      <div class="cost-calc">
+        <div class="line"><span>Quality control rate (10% sample)</span><span>standard practice</span></div>
+        <div class="line"><span>Cost per metadata field</span><span>$4.00</span></div>
+        <div class="line"><span>Fields per WARC file</span><span>3</span></div>
+        <div class="line"><span>WARC files produced yearly</span><span>45,000+</span></div>
+        <div class="line"><span>Annual cost</span><span>$540,000</span></div>
+      </div>
+      <div class="cost-total">
+        <div class="cost-total-num">$540K</div>
+        <div class="cost-total-label">per year, manually</div>
+      </div>
+    </div>
+
+    <p>The GPT-4o API cost on 112 WARC files without any data reduction: <strong>$11,651.88 SGD</strong>. With heuristics applied: <strong>$7.22-$8.83 SGD</strong>. Same files, same model, different input selection. The cost problem was solved entirely in preprocessing.</p>
+
+    <p>The question wasn't whether LLMs could help - it was whether they could help cheaply enough to be worth it, and accurately enough to trust. A WARC file contains the full archived web content of a site: HTML, images, layout, every page crawled. Feeding a whole WARC file to GPT-4o isn't just expensive, it's wasteful. Most of the content is irrelevant to metadata generation.</p>
+
+    <div class="callout insight">
+      <div class="callout-label">The key insight</div>
+      <p>Cataloguers don't read every page of a website to write metadata. They go to the about page or the homepage. If the model only needs what the cataloguer uses, the token problem mostly solves itself.</p>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">The Approach</div>
+    <h2>Data reduction first, model second</h2>
+    <p>Before writing a single prompt, the team built a WARC processing pipeline: parse the archive, extract HTML responses, deduplicate on normalised URLs, filter low-quality content. This converts a raw WARC file into a structured DataFrame of page titles and text. The expensive part isn't writing - it's deciding what to send.</p>
+    <p>Three competing heuristics were developed and tested for selecting the most relevant page content from each archived site before sending anything to the model.</p>
+
+    <div class="heuristics-grid">
+      <div class="heuristic-card selected">
+        <div class="heuristic-num">Heuristic 1 - selected</div>
+        <div class="heuristic-title">"About" page or shortest URL + homepage</div>
+        <div class="heuristic-desc">Prioritises the about page if present (where organisations describe themselves), falling back to the shortest URL by length plus the root domain. Grounded in how cataloguers actually navigate sites.</div>
+      </div>
+      <div class="heuristic-card">
+        <div class="heuristic-num">Heuristic 2</div>
+        <div class="heuristic-title">Shortest URL + homepage</div>
+        <div class="heuristic-desc">Shortest URL by length plus the website's root URL. Simpler than H1, no about-page detection logic.</div>
+      </div>
+      <div class="heuristic-card">
+        <div class="heuristic-num">Heuristic 3</div>
+        <div class="heuristic-title">Shortest URL + regex rules</div>
+        <div class="heuristic-desc">Heuristic 2 plus regular expression filtering rules for additional noise removal. More complex, marginal gain.</div>
+      </div>
+    </div>
+
+    <p>All three heuristics were evaluated against cost and output quality using a ranked aggregation of BERTScore (maximum median), Levenshtein distance (minimum median), and standard deviation (minimum). The two best performers - <strong>Heuristic 2 with cataloguer rules</strong> and <strong>Heuristic 3 without rules</strong> - were shortlisted for manual evaluation. Heuristic 1 (the about-page approach) did not rank top in automated scoring, though it was the most behaviourally motivated.</p>
+
+    <div class="pipeline">
+      <div class="pipeline-stage">
+        <div class="pipeline-num">01</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">WARC parsing and extraction</div>
+          <p class="pipeline-stage-desc">Multithreaded Python pipeline parses WARC archives, processes HTML responses, extracts page titles and text, runs quality checks, deduplicates on normalised URLs, outputs a structured DataFrame. Built to handle 45,000+ files yearly without manual intervention.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">Python</span>
+          <span class="tag">BeautifulSoup</span>
+          <span class="tag">Multithreading</span>
+        </div>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-num">02</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">Heuristic content selection</div>
+          <p class="pipeline-stage-desc">Apply Heuristic 1: identify the about page or shortest URL plus homepage. This reduces the content sent to the model from an entire crawled site to 1-2 pages - the ones a cataloguer would actually read. <strong>Token reduction: 99.9%.</strong> The cost problem is solved here, not at the model level.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">Heuristics</span>
+          <span class="tag">URL analysis</span>
+        </div>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-num">03</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">GPT-4o title and abstract generation</div>
+          <p class="pipeline-stage-desc">Four prompt variants were developed and benchmarked - two without cataloguer rules (zero-shot, chain-of-thought), two with cataloguer rules embedded (templates for company sites, property sites, personal blogs). Evaluated using <strong>Levenshtein distance</strong> for title accuracy and <strong>BERTScore</strong> for abstract semantic similarity. Selected the prompt with maximum median BERTScore, minimum median Levenshtein, and minimum standard deviation across the test set.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">GPT-4o</span>
+          <span class="tag">Chain-of-thought</span>
+          <span class="tag">BERTScore</span>
+          <span class="tag">Levenshtein</span>
+        </div>
+      </div>
+      <div class="pipeline-stage">
+        <div class="pipeline-num">04</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">SingHeritage subject label assignment</div>
+          <p class="pipeline-stage-desc">Beyond title and abstract, each website needs subject labels from NLB's SingHeritage vocabulary - 1,148 labels across 8 hierarchical levels. Three approaches were benchmarked: GPT-4o direct assignment (weighted F1: 56%), <strong>CatBoost with GTE-large embeddings</strong> (superior precision), and a Graph Neural Network over the SingHeritage label hierarchy (level 1 F1: 65%). Natural Language Inference was used as a post-processing step to filter GPT-4o hallucinations - improved precision from 0.47 to 0.51 while catching false label assignments.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">CatBoost</span>
+          <span class="tag">GTE-large</span>
+          <span class="tag">GNN</span>
+          <span class="tag">NLI</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">Evaluation</div>
+    <h2>A Turing test with eight cataloguers</h2>
+    <p>The standard evaluation metrics tell you about surface similarity. They don't tell you whether a practising cataloguer would trust the output. So a blind evaluation was run using Cochran's Q test: 8 trained cataloguers assessed titles and abstracts from three sources - two GPT-4o variants and one human-curated set - without knowing which was which. Each was rated pass or fail against cataloguing standards.</p>
+    <p>The pass rates were stark: <strong>Heuristic 2 (with rules): 77.78%</strong>, Heuristic 3 (without rules): 78.70%, <strong>Human: 90.74%</strong>. Cochran's Q test rejected the null hypothesis at p = 0.02 - the difference is statistically significant. The GPT-4o outputs were distinguishable from human-written metadata. Notably, adding cataloguer rules to the prompt made almost no difference to pass rate, suggesting the bottleneck is the model's output quality, not prompt design.</p>
+    <p>The failure mode breakdown was specific: <strong>19.6% of LLM outputs had content issues</strong> - inaccuracies, incompleteness, or hallucinations - compared to 6.3% for human-curated metadata. Language translation issues affected both equally. The pipeline ran on a Lenovo ThinkPad T14 (i5, 16GB RAM) - four hours total to process 112 files and generate metadata.</p>
+
+    <div class="callout warning">
+      <div class="callout-label">Honest finding</div>
+      <p>The quality bar for human cataloguers was not met. The paper says this plainly. The case for the system isn't that it's as good as a cataloguer - it's that 80% quality at 0.1% cost may be the right tradeoff for a collection of this scale, where the alternative is no metadata at all for most of it.</p>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">Outcome</div>
+    <h2>Open source, published, and in production use.</h2>
+
+    <div class="result-grid">
+      <div class="result-cell">
+        <div class="result-cell-label">API cost reduction</div>
+        <div class="result-cell-value">99.9%</div>
+        <p class="result-cell-desc">From sending full WARC content to 1-2 selected pages. The cost problem was solved by data selection, not model choice.</p>
+      </div>
+      <div class="result-cell">
+        <div class="result-cell-label">Cataloguer evaluation</div>
+        <div class="result-cell-value">p = 0.02</div>
+        <p class="result-cell-desc">Null hypothesis rejected - 8 cataloguers could distinguish GPT-4o output from human-written metadata. Quality gap is real and documented.</p>
+      </div>
+      <div class="result-cell">
+        <div class="result-cell-label">SingHeritage F1 (GNN)</div>
+        <div class="result-cell-value">65%</div>
+        <p class="result-cell-desc">Level 1 SingHeritage label assignment via Graph Neural Network over the label hierarchy. Degrades at deeper levels - more GPU needed.</p>
+      </div>
+      <div class="result-cell">
+        <div class="result-cell-label">Publication</div>
+        <div class="result-cell-value">ITAL '25</div>
+        <p class="result-cell-desc">Published in Information Technology and Libraries, 2025. Open access. The findings, including the limitations, are in the record.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">Honest reflection</div>
+    <h2>What the paper says and what I'd add</h2>
+    <p>The paper is honest about the limitations and so is this. GPT-4o's non-reproducibility is a genuine operational problem for a library system - metadata that changes depending on what day you run it isn't metadata you can trust. The multilingual hallucination issue wasn't fully solved. Prompting for English output doesn't guarantee English output on Chinese or Malay sites.</p>
+    <p>The SingHeritage subject label assignment work - benchmarking GPT-4o, CatBoost with GTE-large embeddings, and a GNN over the label hierarchy - was a separate workstream not covered in this paper. The GNN approach in particular (level 1 F1: 65%) was the most technically novel piece and deserves its own writeup eventually.</p>
+    <p>The broader lesson: LLMs are good at drafting, not at being right. Using them to generate a first pass that a cataloguer reviews is probably the right workflow. Using them to replace cataloguers entirely introduces quality and reproducibility problems that aren't worth the saving at the top end of the collection. At the long tail - tens of thousands of low-traffic archived sites that would never get manual metadata - the tradeoff looks much better.</p>
+  </div>
+
+</div>
+
+<div class="case-nav">
+  <a href="entity-resolution.html" class="case-nav-item prev">
+    <span class="case-nav-dir">← Previous</span>
+    <span class="case-nav-title">Entity Resolution at 1.45M Records</span>
+  </a>
+  <a href="nel.html" class="case-nav-item next">
+    <span class="case-nav-dir">Next →</span>
+    <span class="case-nav-title">Knowledge Graph Enrichment with NER</span>
+  </a>
+</div>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 40); });
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => { if (el.isIntersecting) { el.target.classList.add('visible'); observer.unobserve(el.target); } });
+  }, { threshold: 0.08 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

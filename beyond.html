@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beyond the Work - Ashwin Nair</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --border: #232323;
+    --text: #e8e4dc;
+    --muted: #6b6760;
+    --accent: #c8b89a;
+    --accent2: #7ec8a4;
+    --accent3: #c8847e;
+    --accent4: #7ea8c8;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.25rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  nav.scrolled {
+    border-color: var(--border);
+    background: rgba(14,14,14,0.92);
+    backdrop-filter: blur(12px);
+  }
+  .nav-left { display: flex; align-items: center; gap: 1.5rem; }
+  .nav-back {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--accent); }
+  .nav-back::before { content: '← '; }
+  .nav-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .hero {
+    padding: 10rem 3rem 5rem;
+    max-width: 700px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.8s ease forwards 0.2s;
+  }
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 2rem;
+    height: 1px;
+    background: var(--muted);
+  }
+  .hero-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+  .hero-title em { font-style: italic; color: var(--accent); }
+  .hero-desc {
+    font-size: 1rem;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 50ch;
+  }
+
+  /* CARDS */
+  .cards {
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card {
+    background: var(--bg);
+    padding: 3.5rem 3rem;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+  .card:hover { background: var(--surface); }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+  .card:hover::before { transform: scaleX(1); }
+  .card.salsa::before { background: var(--accent3); }
+  .card.moto::before { background: var(--accent); }
+  .card.gym::before { background: var(--accent2); }
+  .card.tutor::before { background: var(--accent4); }
+
+  .card-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--border);
+    margin-bottom: 2rem;
+    transition: color 0.3s;
+  }
+  .card:hover .card-num { color: var(--muted); }
+
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+  .card.salsa .card-title { color: var(--accent3); }
+  .card.moto .card-title { color: var(--accent); }
+  .card.gym .card-title { color: var(--accent2); }
+  .card.tutor .card-title { color: var(--accent4); }
+
+  .card-body {
+    font-size: 0.95rem;
+    color: var(--muted);
+    line-height: 1.85;
+    margin-bottom: 1.75rem;
+  }
+
+  /* TAGS inside card */
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+  }
+  .ctag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .card-link {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 2px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .card-link:hover { color: var(--text); border-color: var(--muted); }
+
+  /* CURRENTLY */
+  .currently {
+    padding: 5rem 3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .section-label::before {
+    content: '';
+    display: inline-block;
+    width: 1.5rem;
+    height: 1px;
+    background: var(--muted);
+  }
+  .currently-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    max-width: 700px;
+  }
+  .currently-item {
+    background: var(--bg);
+    padding: 2rem;
+    transition: background 0.2s;
+  }
+  .currently-item:hover { background: var(--surface); }
+  .currently-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .currently-status::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent2);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .currently-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+  }
+  .currently-desc {
+    font-size: 0.83rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .footer-note {
+    padding: 3rem;
+  }
+  .footer-note p {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 55ch;
+  }
+  .footer-note a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .footer-note a:hover { border-color: var(--accent); }
+
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .hero { padding: 8rem 1.5rem 4rem; }
+    .cards { grid-template-columns: 1fr; }
+    .currently { padding: 3rem 1.5rem; }
+    .currently-grid { grid-template-columns: 1fr; }
+    .footer-note { padding: 2rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-left">
+    <a href="index.html" class="nav-back">Home</a>
+    <a href="index.html" class="nav-name">Ashwin Nair</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">The rest of it</div>
+  <h1 class="hero-title">Not just<br><em>pipelines.</em></h1>
+  <p class="hero-desc">Some other things that take up time and energy, in no particular order.</p>
+</div>
+
+<div class="cards reveal">
+
+  <div class="card salsa">
+    <div class="card-num">01</div>
+    <div class="card-title">Salsa</div>
+    <div class="card-body">
+      Fun, kinaesthetic, chemistry, timing, steps, synchronicity, playfulness, creativity. Started at Salsa Cubana a while back, left and came back a few times. Part of a performance team now. I think I'll stay this time.
+    </div>
+    <div class="card-tags">
+      <span class="ctag">Rueda de casino</span>
+      <span class="ctag">Partner work</span>
+      <span class="ctag">Performance team</span>
+    </div>
+    <a href="https://learn-salsa.netlify.app" target="_blank" class="card-link">learn-salsa.netlify.app →</a>
+  </div>
+
+  <div class="card moto">
+    <div class="card-num">02</div>
+    <div class="card-title">Motorbikes</div>
+    <div class="card-body">
+      Broke my leg backpacking in Vietnam ten years ago. Took a while but eventually got the 2B. Now I have a bike and I'm looking to improve my skills.
+    </div>
+    <div class="card-tags">
+      <span class="ctag">Class 2B licensed</span>
+      <span class="ctag">XSR155</span>
+      <span class="ctag">Still learning</span>
+    </div>
+  </div>
+
+  <div class="card gym">
+    <div class="card-num">03</div>
+    <div class="card-title">Gym</div>
+    <div class="card-body">
+      It's near my house, so that's the main reason I keep going. Over time I picked up a lot: form, exercises, muscles, functions, breathing, range of motion, fixes for recurring pains. The knowledge compounds.
+    </div>
+    <div class="card-tags">
+      <span class="ctag">Consistency over intensity</span>
+      <span class="ctag">Henderson Waves runs</span>
+    </div>
+  </div>
+
+  <div class="card tutor">
+    <div class="card-num">04</div>
+    <div class="card-title">Tutoring</div>
+    <div class="card-body">
+      Weekly sessions with primary and secondary students from rental flat communities through Rental Hearts. Maths and English. Nice to give back, help kids with their problems, make a small difference.
+    </div>
+    <div class="card-tags">
+      <span class="ctag">Rental Hearts</span>
+      <span class="ctag">2025 - present</span>
+      <span class="ctag">Maths + English</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="currently reveal">
+  <div class="section-label">Right now</div>
+  <div class="currently-grid">
+    <div class="currently-item">
+      <div class="currently-status">Active</div>
+      <div class="currently-title">Georgia Tech OMSCS</div>
+      <div class="currently-desc">CS6601 Artificial Intelligence. Part-time, 2026-2029. Accepted off the waitlist.</div>
+    </div>
+    <div class="currently-item">
+      <div class="currently-status">Active</div>
+      <div class="currently-title">Performance team</div>
+      <div class="currently-desc">Joined my instructor Suzana's salsa performance team. Rehearsals ongoing.</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-note reveal">
+  <p>Want to talk about the work? <a href="mailto:nair.ashwin1994@gmail.com">nair.ashwin1994@gmail.com</a>. Want to talk about salsa footwork or XSR155s, same address.</p>
+</div>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 40); });
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => { if (el.isIntersecting) { el.target.classList.add('visible'); observer.unobserve(el.target); } });
+  }, { threshold: 0.05 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entity Resolution - Ashwin Nair</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --border: #232323;
+    --text: #e8e4dc;
+    --muted: #6b6760;
+    --accent: #c8b89a;
+    --accent2: #7ec8a4;
+    --accent3: #c8847e;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.25rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  nav.scrolled {
+    border-color: var(--border);
+    background: rgba(14,14,14,0.92);
+    backdrop-filter: blur(12px);
+  }
+  .nav-left { display: flex; align-items: center; gap: 1.5rem; }
+  .nav-back {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--accent); }
+  .nav-back::before { content: '← '; }
+  .nav-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .nav-case-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 0.2rem 0.6rem;
+  }
+  .case-hero {
+    padding: 10rem 3rem 5rem;
+    max-width: 900px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.8s ease forwards 0.2s;
+  }
+  .case-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .case-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 2rem;
+    height: 1px;
+    background: var(--accent2);
+  }
+  .case-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+  .case-title em { font-style: italic; color: var(--accent); }
+  .case-subtitle {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 55ch;
+    line-height: 1.8;
+  }
+  .stat-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 0 3rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.5s;
+  }
+  .stat-bar-cell { background: var(--bg); padding: 1.5rem 2rem; }
+  .stat-bar-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .stat-bar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .case-content {
+    max-width: 900px;
+    padding: 0 3rem;
+    margin: 0 auto;
+  }
+  .case-section {
+    padding: 5rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .case-section:first-child { border-top: none; padding-top: 4rem; }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .section-label::before {
+    content: '';
+    display: inline-block;
+    width: 1.5rem;
+    height: 1px;
+    background: var(--accent2);
+  }
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+  }
+  p {
+    font-size: 1rem;
+    color: var(--muted);
+    line-height: 1.85;
+    margin-bottom: 1.25rem;
+    max-width: 65ch;
+  }
+  p strong { color: var(--accent); font-weight: 500; }
+  p:last-child { margin-bottom: 0; }
+
+  .scale-table {
+    margin: 2rem 0;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .scale-table table { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 0.78rem; }
+  .scale-table th {
+    background: var(--surface);
+    padding: 0.75rem 1.25rem;
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .scale-table td { padding: 0.65rem 1.25rem; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .scale-table tr:last-child td { border-bottom: none; }
+  .scale-table td:first-child { color: var(--text); }
+  .scale-table td.bad { color: var(--accent3); }
+  .scale-table tr:hover td { background: var(--surface); }
+
+  .pipeline {
+    margin: 3rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .pipeline-stage {
+    background: var(--bg);
+    padding: 2rem 2.5rem;
+    display: grid;
+    grid-template-columns: 2.5rem 1fr auto;
+    gap: 2rem;
+    align-items: start;
+    transition: background 0.2s;
+  }
+  .pipeline-stage:hover { background: var(--surface); }
+  .pipeline-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--border);
+    letter-spacing: 0.1em;
+    padding-top: 0.2rem;
+    transition: color 0.2s;
+  }
+  .pipeline-stage:hover .pipeline-num { color: var(--accent); }
+  .pipeline-stage-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.15rem;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .pipeline-stage-desc {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: none;
+    margin: 0;
+  }
+  .pipeline-stage-desc strong { color: var(--accent); font-weight: 500; }
+  .pipeline-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: flex-end;
+    min-width: 110px;
+  }
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .pipeline-connector {
+    background: var(--bg);
+    padding: 0.6rem 2.5rem 0.6rem calc(2.5rem + 2.5rem + 2rem);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    color: var(--border);
+  }
+  .dead-end {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent3);
+    padding: 1.5rem 2rem;
+    margin: 1.5rem 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  .dead-end-icon {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    white-space: nowrap;
+    padding-top: 0.1rem;
+  }
+  .dead-end p { font-size: 0.88rem; color: var(--muted); margin: 0; max-width: none; }
+  .dead-end p strong { color: var(--accent3); }
+  .callout {
+    border-left: 2px solid var(--accent);
+    padding: 1.5rem 2rem;
+    background: var(--surface);
+    margin: 2.5rem 0;
+  }
+  .callout p { color: var(--text); font-size: 0.95rem; margin: 0; max-width: none; }
+  .callout-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+  .callout.insight { border-left-color: var(--accent2); }
+  .callout.insight .callout-label { color: var(--accent2); }
+
+  .phase-results {
+    margin: 2rem 0;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .phase-results table { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 0.78rem; }
+  .phase-results th {
+    background: var(--surface);
+    padding: 0.75rem 1.25rem;
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .phase-results td { padding: 0.65rem 1.25rem; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .phase-results tr:last-child td { border-bottom: none; }
+  .phase-results td:first-child { color: var(--text); }
+  .phase-results td.good { color: var(--accent2); }
+  .phase-results td.dead { color: var(--accent3); }
+  .phase-results tr:hover td { background: var(--surface); }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+  .result-cell { background: var(--bg); padding: 2rem; }
+  .result-cell-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .result-cell-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.5rem;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .result-cell-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin: 0; max-width: none; }
+
+  .case-nav {
+    border-top: 1px solid var(--border);
+    padding: 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 5rem;
+  }
+  .case-nav-item { display: flex; flex-direction: column; gap: 0.4rem; text-decoration: none; max-width: 280px; }
+  .case-nav-item.next { align-items: flex-end; text-align: right; }
+  .case-nav-dir {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .case-nav-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--text);
+    transition: color 0.2s;
+  }
+  .case-nav-item:hover .case-nav-title { color: var(--accent); }
+
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .case-hero { padding: 8rem 1.5rem 3rem; }
+    .case-content { padding: 0 1.5rem; }
+    .stat-bar { grid-template-columns: 1fr 1fr; margin: 0 1.5rem; }
+    .pipeline-stage { grid-template-columns: 1fr; gap: 1rem; }
+    .pipeline-tags { flex-direction: row; }
+    .result-grid { grid-template-columns: 1fr; }
+    .dead-end { grid-template-columns: 1fr; }
+    .case-nav { flex-direction: column; gap: 2rem; padding: 2rem 1.5rem; }
+    .case-nav-item.next { align-items: flex-start; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-left">
+    <a href="index.html" class="nav-back">All work</a>
+    <a href="index.html" class="nav-name">Ashwin Nair</a>
+  </div>
+  <span class="nav-case-label">Case Study</span>
+</nav>
+
+<div class="case-hero">
+  <div class="case-eyebrow">National Library Board · 2023–2025</div>
+  <h1 class="case-title">Match Me<br><em>If You Can</em><br>- 1.45M Records</h1>
+  <p class="case-subtitle">NLB holds 1.45 million personal name authority records that need to stay in sync with the Library of Congress Name Authority Files - 12 million records. Manual reconciliation was running at 500 records a day. That's an 8-year backlog.</p>
+</div>
+
+<div class="stat-bar">
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">95.2%</div>
+    <div class="stat-bar-label">F1 - Phase III</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">701K+</div>
+    <div class="stat-bar-label">High-confidence matches</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">511K+</div>
+    <div class="stat-bar-label">Matched via embeddings</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">17T</div>
+    <div class="stat-bar-label">Comparisons avoided</div>
+  </div>
+</div>
+
+<div class="case-content">
+
+  <div class="case-section reveal">
+    <div class="section-label">The Problem</div>
+    <h2>17 trillion comparisons. One laptop. No GPU cluster.</h2>
+    <p>Authority control is unglamorous infrastructure work. NLB maintains personal name authority records - people, organisations, geographic entities - that need to align with the Library of Congress Name Authority Files (LCNAF) as the canonical external reference. When they don't, the same person appears under multiple inconsistent forms across NLB's systems, breaking entity linkage and degrading discovery quality downstream.</p>
+    <p>The data problems are exactly what you'd expect at this scale: <strong>typos, outdated labels, missing identifiers, inconsistent transliterations, diacritics</strong>. "Carpelan, Bo Gustaf Bertelsson, 1926-" vs "Carpelan, Bo, 1926-2011." "Kim, Young-Hee: Sculptor" vs "Kim, Young-Hee: Chef." These aren't edge cases - they're everywhere.</p>
+    <p>The hard constraint: a <strong>single laptop, 64GB RAM, no GPU cluster</strong>. Every architectural decision flowed from this.</p>
+
+    <div class="scale-table">
+      <table>
+        <thead>
+          <tr><th>Records</th><th>Naive pairwise comparisons</th><th>Estimated time</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1,000</td><td>499,500</td><td>6.2 hours</td></tr>
+          <tr><td>10,000</td><td>49,995,000</td><td>25.7 days</td></tr>
+          <tr><td>100,000</td><td>4,999,950,000</td><td>7 years</td></tr>
+          <tr><td class="bad">1,000,000</td><td class="bad">5 × 10¹¹</td><td class="bad">70.4 years</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Naive O(n×m) matching across 1.45M records against 12M LCNAF records produces 17 trillion pairwise comparisons. The problem isn't finding the right algorithm - it's making the problem tractable at all.</p>
+
+    <div class="callout insight">
+      <div class="callout-label">Design principle</div>
+      <p>Start with the cheapest method. Only add complexity for what's left. Scalable, layered design beats both brute-force and overengineered approaches.</p>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">The Approach</div>
+    <h2>Three phases, each earning its existence</h2>
+    <p>The solution is a staged pipeline where each phase handles the easiest remaining cases and passes only the genuinely hard ones downstream. The goal is to never run an expensive method on a problem a cheap one can solve.</p>
+
+    <div class="pipeline">
+      <div class="pipeline-stage">
+        <div class="pipeline-num">01</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">Deterministic SQL joins</div>
+          <p class="pipeline-stage-desc">Load LCNAF (via SPARQL from GraphDB → CSV) and ILS records into PostgreSQL. Inner-join on <strong>LC Control Numbers (LCCN)</strong> - records with matching identifiers link instantly. Then label normalisation: lowercase, strip punctuation. Simple but surprisingly effective. <strong>LCCN join: 25% matched. Label normalisation: +23%.</strong> Total: 48% of 1.45M records resolved before any ML. SQL chosen deliberately over GraphDB (memory-intensive for bulk text ops) and Excel (hard cap at ~1M rows).</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">PostgreSQL</span>
+          <span class="tag">SPARQL</span>
+          <span class="tag">GraphDB</span>
+        </div>
+      </div>
+
+      <div class="pipeline-connector">↓ 511K unmatched records remain</div>
+
+      <div class="pipeline-stage">
+        <div class="pipeline-num">02</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">Blocking + string matching</div>
+          <p class="pipeline-stage-desc">For the remaining 511K records, ran a proper blocking algorithm selection process - evaluated q-gram, standard, extended q-gram, suffix arrays, and extended suffix arrays against recall and comparison reduction ratio. Selected <strong>trigram blocking</strong> to reduce candidate pairs by over 90%, followed by string similarity (Levenshtein, Jaro, Jaccard) with threshold optimisation. Trained and evaluated on 34,175 labelled name pairs with LCCN ground truth. <strong>Test F1 ≈ 98.85%.</strong> The method worked. The scale didn't.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">Trigram blocking</span>
+          <span class="tag">Levenshtein</span>
+          <span class="tag">Jaro</span>
+          <span class="tag">Jaccard</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dead-end">
+      <div class="dead-end-icon">Dead end</div>
+      <p>Blocking methods broke down at 1.45M records. Too many candidate pairs generated. Token-based methods consumed excessive memory. Intermediate data structures grew faster than available RAM. <strong>98.85% F1 on the labelled test set - but unrunnable in production on a single laptop.</strong> The algorithm was sound. The hardware constraint killed it. Time to rethink.</p>
+    </div>
+
+    <div class="pipeline" style="margin-top: 2rem;">
+      <div class="pipeline-stage">
+        <div class="pipeline-num">03</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">Text embeddings + approximate nearest neighbour search</div>
+          <p class="pipeline-stage-desc">The insight from Phase II: string matching requires generating and comparing candidate pairs explicitly. Embedding-based search doesn't - encode once, then search an index. Benchmarked five embedding models on accuracy, encode speed, and RAM usage. Selected <strong>MiniLM-L6</strong> as the best efficiency/accuracy balance (~1,266 MB RAM on test set). Built an <strong>IVFFlat index</strong> (k-means into Voronoi cells, tuned nlist and nprobe) to retrieve top-10 candidates per query without exhaustive search. Re-ranked the top-10 using an <strong>XGBoost classifier</strong> trained on string and embedding similarity features - using the high-confidence LCCN matches from Phase I as ground truth, with no manual annotation needed. ANN makes the 511K × 12M search tractable; XGBoost makes the final call precisely.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">MiniLM-L6</span>
+          <span class="tag">IVFFlat</span>
+          <span class="tag">FAISS</span>
+          <span class="tag">XGBoost</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout insight">
+      <div class="callout-label">Why XGBoost for reranking</div>
+      <p>The LCCN-matched records from Phase I gave clean ground truth for free - no manual annotation needed. XGBoost on string and embedding similarity features trains fast, handles mixed feature types, and is interpretable. When a cataloguer questions a match decision, you can show them which features drove it. "The neural network said so" is not a defensible answer in a production library system.</p>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">Outcome</div>
+    <h2>1.2M+ records matched. 8-year backlog retired.</h2>
+
+    <div class="phase-results">
+      <table>
+        <thead>
+          <tr><th>Phase</th><th>Method</th><th>Records matched</th><th>Result</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>I</td>
+            <td>SQL - LCCN join + label normalisation</td>
+            <td>~701K (48%)</td>
+            <td class="good">Deterministic - high confidence</td>
+          </tr>
+          <tr>
+            <td>II</td>
+            <td>Trigram blocking + string matching</td>
+            <td>- (broke at scale)</td>
+            <td class="dead">98.85% F1 on test, OOM in prod</td>
+          </tr>
+          <tr>
+            <td>III</td>
+            <td>MiniLM-L6 → IVFFlat → XGBoost</td>
+            <td>511K+ (>90% confidence)</td>
+            <td class="good">95.22% F1</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="result-grid">
+      <div class="result-cell">
+        <div class="result-cell-label">Phase III test F1</div>
+        <div class="result-cell-value">95.22%</div>
+        <p class="result-cell-desc">MiniLM-L6 → IVFFlat ANN → XGBoost reranker. Precision favoured over recall - a wrong match degrades the downstream system worse than a missed one.</p>
+      </div>
+      <div class="result-cell">
+        <div class="result-cell-label">Total matched</div>
+        <div class="result-cell-value">1.2M+</div>
+        <p class="result-cell-desc">701K via deterministic joins, 511K+ via embeddings. An 8-year manual backlog resolved on commodity hardware.</p>
+      </div>
+      <div class="result-cell">
+        <div class="result-cell-label">Hardware</div>
+        <div class="result-cell-value">1 laptop</div>
+        <p class="result-cell-desc">64GB RAM. No GPU cluster, no cloud compute. Every architectural decision was shaped by this constraint.</p>
+      </div>
+      <div class="result-cell">
+        <div class="result-cell-label">Comparisons avoided</div>
+        <div class="result-cell-value">17T</div>
+        <p class="result-cell-desc">ANN indexing made what would have taken 70 years of naive matching tractable in a staged pipeline.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">Honest reflection</div>
+    <h2>What I'd do differently</h2>
+    <p>Phase II failing at scale was the most instructive moment. The blocking methods were correct - the test results proved that. The mistake was not running a smaller-scale test (say, 100K records) before committing the full dataset. That would have caught the memory ceiling earlier and saved significant time.</p>
+    <p>MiniLM-L6 was a reasonable choice given that ILS preferred names are stored in English, so the matching problem was largely English-to-English. The issue is that LCNAF contains multilingual variants - alternate labels in Chinese, Malay, Tamil and other scripts - and MiniLM-L6 doesn't handle those well. In practice this means the pipeline matches on preferred English forms but misses connections that could have been made via non-Latin alternate labels. A multilingual embedding model would have captured those at modest additional cost. Not a critical flaw for the core use case, but a real gap in coverage.</p>
+    <p>The XGBoost reranker was trained on LCCN-derived ground truth, which skews Western. The same distribution mismatch applies. A few thousand Southeast Asian name pairs, manually verified, would likely improve final F1 more than any model upgrade. Data quality beats model sophistication here.</p>
+  </div>
+
+</div>
+
+<div class="case-nav">
+  <a href="ntu.html" class="case-nav-item prev">
+    <span class="case-nav-dir">← Previous</span>
+    <span class="case-nav-title">Keyword Networks & Research Collaboration</span>
+  </a>
+  <a href="warc2summary.html" class="case-nav-item next">
+    <span class="case-nav-dir">Next →</span>
+    <span class="case-nav-title">warc2summary</span>
+  </a>
+</div>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 40); });
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => { if (el.isIntersecting) { el.target.classList.add('visible'); observer.unobserve(el.target); } });
+  }, { threshold: 0.08 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

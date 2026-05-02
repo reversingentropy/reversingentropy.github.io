@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ashwin Nair - ML Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --border: #232323;
+    --text: #e8e4dc;
+    --muted: #6b6760;
+    --accent: #c8b89a;
+    --accent2: #7ec8a4;
+    --tag-bg: #1c1c1c;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* GRAIN OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 1.25rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  nav.scrolled {
+    border-color: var(--border);
+    background: rgba(14,14,14,0.92);
+    backdrop-filter: blur(12px);
+  }
+  .nav-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 0 3rem;
+    gap: 4rem;
+    align-items: center;
+    position: relative;
+  }
+
+  .hero-left {
+    padding-top: 6rem;
+    opacity: 0;
+    transform: translateY(24px);
+    animation: fadeUp 0.9s ease forwards 0.2s;
+  }
+
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 2rem;
+    height: 1px;
+    background: var(--accent2);
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(3rem, 5vw, 5.5rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-desc {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 38ch;
+    line-height: 1.8;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--border);
+    color: var(--text);
+    transition: all 0.2s;
+    position: relative;
+  }
+  .btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+  .btn-primary:hover {
+    background: transparent;
+    color: var(--accent);
+  }
+
+  .hero-right {
+    padding-top: 6rem;
+    opacity: 0;
+    animation: fadeIn 1.2s ease forwards 0.6s;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .stat-cell {
+    background: var(--bg);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-cell::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--accent);
+    transition: width 0.4s ease;
+  }
+  .stat-cell:hover::after { width: 100%; }
+  .stat-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.8rem;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* SECTION */
+  section {
+    padding: 7rem 3rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+  }
+  .section-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.8rem, 3vw, 2.8rem);
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  /* WORK */
+  .work-grid {
+    display: grid;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .work-item {
+    background: var(--bg);
+    padding: 2.5rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr 2fr auto;
+    gap: 3rem;
+    align-items: start;
+    transition: background 0.2s;
+    cursor: default;
+  }
+  .work-item:hover { background: var(--surface); }
+
+  .work-meta {}
+  .work-org {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 0.4rem;
+  }
+  .work-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+  }
+  .work-period {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  .work-details {}
+  .work-bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .work-bullets li {
+    font-size: 0.92rem;
+    color: var(--muted);
+    padding-left: 1.2rem;
+    position: relative;
+    line-height: 1.6;
+  }
+  .work-bullets li::before {
+    content: '-';
+    position: absolute;
+    left: 0;
+    color: var(--border);
+  }
+  .work-bullets li strong {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .work-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: flex-end;
+    min-width: 120px;
+  }
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* PROJECTS */
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .project-card {
+    background: var(--bg);
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .project-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+  }
+  .project-card:hover { background: var(--surface); }
+  .project-card:hover::before { transform: scaleX(1); }
+
+  .project-card.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .project-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent2);
+  }
+  .project-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .project-desc {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.7;
+    flex: 1;
+  }
+  .project-desc strong {
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .project-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 0.5rem;
+  }
+  .project-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .project-link {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1px;
+    transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+  }
+  .project-link:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* SCREENSHOT */
+  .screenshot-strip {
+    margin-top: 1.5rem;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    opacity: 0.7;
+    transition: opacity 0.3s;
+  }
+  .project-card:hover .screenshot-strip { opacity: 1; }
+  .screenshot-strip img {
+    width: 100%;
+    display: block;
+    filter: grayscale(20%);
+  }
+
+  /* PUBLICATIONS */
+  .pubs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .pub-item {
+    background: var(--bg);
+    padding: 2rem 2.5rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 2rem;
+    align-items: center;
+    transition: background 0.2s;
+  }
+  .pub-item:hover { background: var(--surface); }
+  .pub-year {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    min-width: 40px;
+  }
+  .pub-info {}
+  .pub-title {
+    font-size: 0.95rem;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+    line-height: 1.4;
+  }
+  .pub-venue {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+  .pub-link {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.8rem;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .pub-link:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* BEYOND */
+  .beyond-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .beyond-card {
+    background: var(--bg);
+    padding: 2.5rem;
+    transition: background 0.2s;
+  }
+  .beyond-card:hover { background: var(--surface); }
+  .beyond-icon {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+  .beyond-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+  }
+  .beyond-desc {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .beyond-desc a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .beyond-desc a:hover { border-color: var(--accent); }
+
+  /* FOOTER */
+  footer {
+    padding: 3rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-left {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--accent);
+  }
+  .footer-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+  .footer-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--text); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  @media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    .hero { grid-template-columns: 1fr; padding: 0 1.5rem; min-height: auto; padding-top: 6rem; padding-bottom: 4rem; }
+    .hero-right { padding-top: 0; }
+    section { padding: 4rem 1.5rem; }
+    .work-item { grid-template-columns: 1fr; gap: 1.5rem; padding: 2rem 1.5rem; }
+    .work-tags { flex-direction: row; align-items: flex-start; }
+    .projects-grid { grid-template-columns: 1fr; }
+    .project-card.full-width { grid-column: 1; }
+    .beyond-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 2rem; text-align: center; }
+    .pub-item { grid-template-columns: 1fr; gap: 0.75rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-name">Ashwin Nair</div>
+  <ul class="nav-links">
+    <li><a href="#work">Work</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#publications">Publications</a></li>
+    <li><a href="#beyond">Beyond</a></li>
+    <li><a href="beyond.html">Life</a></li>
+    <li><a href="mailto:nair.ashwin1994@gmail.com">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">ML Engineer · Singapore</div>
+    <h1>Making large,<br><em>messy</em> information<br>tractable.</h1>
+    <p class="hero-desc">I build production pipelines at the intersection of NLP, information retrieval, and knowledge graphs. Currently at the National Library Board, pursuing an OMSCS at Georgia Tech.</p>
+    <div class="hero-cta">
+      <a href="#projects" class="btn btn-primary">See the work</a>
+      <a href="https://github.com/ReversingEntropy" target="_blank" class="btn">GitHub</a>
+      <a href="mailto:nair.ashwin1994@gmail.com" class="btn">Get in touch</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="stats-grid">
+      <div class="stat-cell">
+        <div class="stat-num">93.9%</div>
+        <div class="stat-label">F1 on entity resolution<br>across 12M records</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-num">99.9%</div>
+        <div class="stat-label">API cost reduction<br>warc2summary</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-num">16K</div>
+        <div class="stat-label">RDF triples injected<br>into knowledge graph</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-num">2</div>
+        <div class="stat-label">Peer-reviewed<br>publications</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WORK -->
+<section id="work">
+  <div class="section-header reveal">
+    <span class="section-num">01</span>
+    <h2>Experience</h2>
+  </div>
+  <div class="work-grid reveal">
+    <div class="work-item">
+      <div class="work-meta">
+        <div class="work-org">National Library Board</div>
+        <div class="work-title">ML Engineer</div>
+        <div class="work-period">Dec 2022 - Present</div>
+      </div>
+      <div class="work-details">
+        <ul class="work-bullets">
+          <li>Designed a three-phase entity resolution pipeline (MiniLM + IVFFlat + XGBoost) reconciling <strong>1.45M names against 12M records</strong> at <strong>95.2% F1</strong>, cutting manual updates by 90%. <a href="entity-resolution.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--border);">Case study →</a></li>
+          <li>Open-sourced <strong>warc2summary</strong>, a GPT-4o pipeline for Web Archive metadata generation. Token-reduction heuristics slashed API costs by <strong>99.9%</strong>. Validated with 8 cataloguers, led a 3-person team. <a href="warc2summary.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--border);">Case study →</a></li>
+          <li>Built a GPT-4 named-entity-linking pipeline that injected <strong>16K RDF triples</strong> into the NLB knowledge graph, improving cross-resource discovery. <a href="nel.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--border);">Case study →</a></li>
+          <li>Designed the <strong>KOS Pipeline</strong> - a semi-automated news monitoring system proposing structured, evidence-backed updates to NLB's knowledge base via BM25 entity linking and two-stage LLM calls.</li>
+        </ul>
+      </div>
+      <div class="work-tags">
+        <span class="tag">PyTorch</span>
+        <span class="tag">FAISS</span>
+        <span class="tag">BM25</span>
+        <span class="tag">GPT-4o</span>
+        <span class="tag">spaCy</span>
+        <span class="tag">RDF</span>
+      </div>
+    </div>
+    <div class="work-item">
+      <div class="work-meta">
+        <div class="work-org">Nanyang Technological University</div>
+        <div class="work-title">Research Assistant</div>
+        <div class="work-period">Sep 2021 - Sep 2022</div>
+      </div>
+      <div class="work-details">
+        <ul class="work-bullets">
+          <li>Modelled co-authorship and keyword networks on a Web of Science dataset of <strong>1,284 investigators</strong>. Prototype reproduced all 10 funded grant teams at <strong>F1 = 0.80</strong>. <a href="ntu.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--border);">Case study →</a></li>
+        </ul>
+      </div>
+      <div class="work-tags">
+        <span class="tag">PyTorch Geometric</span>
+        <span class="tag">Graph ML</span>
+        <span class="tag">NLP</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="section-header reveal">
+    <span class="section-num">02</span>
+    <h2>Projects</h2>
+  </div>
+  <div class="projects-grid reveal">
+
+    <div class="project-card full-width">
+      <div class="project-eyebrow">NLB · Production</div>
+      <div class="project-name">KOS Pipeline - Automated Knowledge Base Population</div>
+      <div class="project-desc">
+        A semi-automated pipeline that reads Singapore news articles and proposes structured, evidence-backed updates to NLB's knowledge organisation system. Articles are classified, BM25-indexed against the full TTE controlled vocabulary, then passed through a two-stage LLM call that extracts structured facts and links them to existing entities. Every proposed change traces to an exact sentence in the source. <strong>9,057 event updates and 2,319 new entity candidates</strong> in the current review queue - no writes without human approval.
+      </div>
+      <div class="project-footer">
+        <div class="project-tags">
+          <span class="tag">BM25</span>
+          <span class="tag">LLM Pipelines</span>
+          <span class="tag">Entity Linking</span>
+          <span class="tag">Streamlit</span>
+          <span class="tag">Knowledge Graphs</span>
+        </div>
+        <div style="display:flex;gap:1rem;align-items:center;">
+          <a href="https://tte-kos.streamlit.app/" target="_blank" class="project-link">Live demo →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="project-card">
+      <div class="project-eyebrow">Open Source · Published</div>
+      <div class="project-name">warc2summary</div>
+      <div class="project-desc">
+        A GPT-4o pipeline that generates title + abstract pairs from Web Archive (WARC) files. Token-reduction heuristics cut API costs by <strong>99.9%</strong> without sacrificing output quality. Validated with 8 cataloguers. Published in <em>Information Technology and Libraries</em> (2025).
+      </div>
+      <div class="project-footer">
+        <div class="project-tags">
+          <span class="tag">GPT-4o</span>
+          <span class="tag">Web Archives</span>
+          <span class="tag">NLP</span>
+        </div>
+        <div style="display:flex;gap:1rem;align-items:center;">
+          <a href="warc2summary.html" class="project-link">Case study →</a>
+          <a href="https://github.com/masamune-prog/warc2summary" target="_blank" class="project-link">GitHub →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="project-card">
+      <div class="project-eyebrow">NLB Black Box 2024 · Featured</div>
+      <div class="project-name">Singaporeana - Multimodal Heritage RAG</div>
+      <div class="project-desc">
+        Proof-of-concept multimodal retrieval-augmented generation for Singaporean heritage articles and posters. Uses jina-clip embeddings + GPT-4o-mini to retrieve and reason across image and text. Featured for outstanding creativity at NLB Black Box 2024.
+      </div>
+      <div class="project-footer">
+        <div class="project-tags">
+          <span class="tag">RAG</span>
+          <span class="tag">Multimodal</span>
+          <span class="tag">jina-clip</span>
+          <span class="tag">Streamlit</span>
+        </div>
+        <a href="https://singaporeana.streamlit.app" target="_blank" class="project-link">Live demo →</a>
+      </div>
+    </div>
+
+    <div class="project-card">
+      <div class="project-eyebrow">Independent</div>
+      <div class="project-name">Extreme Multi-label Classification</div>
+      <div class="project-desc">
+        Fine-tuned ModernBERT with focal loss on <strong>91K scientific abstracts</strong> across 757 labels (multilingual, long-tail distribution). Achieved micro-F1 = 0.63 against a TF-IDF + LogReg baseline of 0.52.
+      </div>
+      <div class="project-footer">
+        <div class="project-tags">
+          <span class="tag">ModernBERT</span>
+          <span class="tag">Focal Loss</span>
+          <span class="tag">Multi-label</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- PUBLICATIONS -->
+<section id="publications">
+  <div class="section-header reveal">
+    <span class="section-num">03</span>
+    <h2>Publications</h2>
+  </div>
+  <div class="pubs-list reveal">
+    <div class="pub-item">
+      <div class="pub-year">2025</div>
+      <div class="pub-info">
+        <div class="pub-title">Web Archives Metadata Generation with GPT-4o: Challenges and Insights</div>
+        <div class="pub-venue">Information Technology and Libraries, 44(2) · Nair, A., Goh, Z. R., Liu, T., & Huang, A. Y.</div>
+      </div>
+      <a href="https://doi.org/10.5860/ital.v44i2.17305" target="_blank" class="pub-link">DOI →</a>
+    </div>
+    <div class="pub-item">
+      <div class="pub-year">2024</div>
+      <div class="pub-info">
+        <div class="pub-title">Metadata Enrichment with Named Entity Recognition using GPT-4</div>
+        <div class="pub-venue">International Conference on Dublin Core and Metadata Applications · Nair, A., Min Hoon, E., & Dresel, R.</div>
+      </div>
+      <a href="https://doi.org/10.23106/dcmi.952445840" target="_blank" class="pub-link">DOI →</a>
+    </div>
+  </div>
+</section>
+
+<!-- BEYOND -->
+<section id="beyond">
+  <div class="section-header reveal">
+    <span class="section-num">04</span>
+    <h2>Beyond the work</h2>
+  </div>
+  <div class="beyond-grid reveal">
+    <div class="beyond-card">
+      <span class="beyond-icon">🎓</span>
+      <div class="beyond-title">Georgia Tech OMSCS</div>
+      <div class="beyond-desc">Enrolled in Georgia Tech's Online Master of Science in Computer Science, pursuing the degree part-time across 2026–2029. Currently in CS6601 (Artificial Intelligence).</div>
+    </div>
+    <div class="beyond-card">
+      <span class="beyond-icon">📚</span>
+      <div class="beyond-title">Volunteer Tutor · Rental Hearts</div>
+      <div class="beyond-desc">Weekly tutoring in Mathematics and English for primary and secondary students from rental flat communities in Singapore. Something I keep showing up to because it actually matters.</div>
+    </div>
+    <div class="beyond-card">
+      <span class="beyond-icon">💃</span>
+      <div class="beyond-title">Learn Salsa</div>
+      <div class="beyond-desc">Built a web app for learning casino salsa and rueda de casino - complete with a combo generator that uses a real move-transition flow graph. Modelling something you love is a different kind of problem. <a href="https://learn-salsa.netlify.app" target="_blank">Try it →</a></div>
+    </div>
+    <div class="beyond-card">
+      <span class="beyond-icon">🇸🇬</span>
+      <div class="beyond-title">Based in Singapore</div>
+      <div class="beyond-desc">Open to roles in Singapore's public and private sector. Particularly interested in teams working on knowledge infrastructure, information retrieval, and applied NLP at scale. <a href="beyond.html">More about me →</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">Ashwin Nair</div>
+  <ul class="footer-links">
+    <li><a href="https://github.com/ReversingEntropy" target="_blank">GitHub</a></li>
+    <li><a href="https://sg.linkedin.com/in/ashwin-nair" target="_blank">LinkedIn</a></li>
+    <li><a href="mailto:nair.ashwin1994@gmail.com">Email</a></li>
+  </ul>
+</footer>
+
+<script>
+  // Nav scroll effect
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  // Reveal on scroll
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => {
+      if (el.isIntersecting) {
+        el.target.classList.add('visible');
+        observer.unobserve(el.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
