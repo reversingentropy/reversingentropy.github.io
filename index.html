@@ -607,7 +607,7 @@
 <div class="hero">
   <div class="hero-left">
     <div class="hero-eyebrow">ML Engineer · Singapore</div>
-    <h1>Making large,<br><em>messy</em> information<br>tractable.</h1>
+    <h1>Bringing<br><em>structure</em><br>to chaos.</h1>
     <p class="hero-desc">I build production pipelines at the intersection of NLP, information retrieval, and knowledge graphs. Currently at the National Library Board, pursuing an OMSCS at Georgia Tech.</p>
     <div class="hero-cta">
       <a href="#projects" class="btn btn-primary">See the work</a>
@@ -618,7 +618,7 @@
   <div class="hero-right">
     <div class="stats-grid">
       <div class="stat-cell">
-        <div class="stat-num">93.9%</div>
+        <div class="stat-num">95.2%</div>
         <div class="stat-label">F1 on entity resolution<br>across 12M records</div>
       </div>
       <div class="stat-cell">
@@ -712,6 +712,23 @@
         <div style="display:flex;gap:1rem;align-items:center;">
           <a href="https://tte-kos.streamlit.app/" target="_blank" class="project-link">Live demo →</a>
         </div>
+      </div>
+    </div>
+
+    <div class="project-card">
+      <div class="project-eyebrow">NLB · Production</div>
+      <div class="project-name">Entity Resolution at 1.45M Records</div>
+      <div class="project-desc">
+        A three-phase pipeline reconciling 1.45M personal name authority records against 12M Library of Congress records. Deterministic SQL joins handle 48% instantly. MiniLM embeddings + IVFFlat ANN search + XGBoost reranker handle the rest. <strong>95.2% F1</strong> on the hardest cases. Built on a single laptop with no GPU cluster.
+      </div>
+      <div class="project-footer">
+        <div class="project-tags">
+          <span class="tag">MiniLM</span>
+          <span class="tag">FAISS</span>
+          <span class="tag">XGBoost</span>
+          <span class="tag">PostgreSQL</span>
+        </div>
+        <a href="entity-resolution.html" class="project-link">Case study →</a>
       </div>
     </div>
 
