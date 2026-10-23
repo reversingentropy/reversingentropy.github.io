@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entity Enrichment - Ashwin Nair</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --border: #232323;
+    --text: #e8e4dc;
+    --muted: #6b6760;
+    --accent: #c8b89a;
+    --accent2: #7ec8a4;
+    --accent3: #c8847e;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.25rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  nav.scrolled {
+    border-color: var(--border);
+    background: rgba(14,14,14,0.92);
+    backdrop-filter: blur(12px);
+  }
+  .nav-left { display: flex; align-items: center; gap: 1.5rem; }
+  .nav-back {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--accent); }
+  .nav-back::before { content: '← '; }
+  .nav-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .nav-case-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 0.2rem 0.6rem;
+  }
+  .case-hero {
+    padding: 10rem 3rem 5rem;
+    max-width: 900px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.8s ease forwards 0.2s;
+  }
+  .case-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .case-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 2rem;
+    height: 1px;
+    background: var(--accent2);
+  }
+  .case-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+  .case-title em { font-style: italic; color: var(--accent); }
+  .case-subtitle {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 55ch;
+    line-height: 1.8;
+  }
+  .stat-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 0 3rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.5s;
+  }
+  .stat-bar-cell { background: var(--bg); padding: 1.5rem 2rem; }
+  .stat-bar-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .stat-bar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .case-content {
+    max-width: 900px;
+    padding: 0 3rem;
+    margin: 0 auto;
+  }
+  .case-section {
+    padding: 5rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .case-section:first-child { border-top: none; padding-top: 4rem; }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .section-label::before {
+    content: '';
+    display: inline-block;
+    width: 1.5rem;
+    height: 1px;
+    background: var(--accent2);
+  }
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+  }
+  p {
+    font-size: 1rem;
+    color: var(--muted);
+    line-height: 1.85;
+    margin-bottom: 1.25rem;
+    max-width: 65ch;
+  }
+  p strong { color: var(--accent); font-weight: 500; }
+  p:last-child { margin-bottom: 0; }
+
+  .scale-table {
+    margin: 2rem 0;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .scale-table table { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 0.78rem; }
+  .scale-table th {
+    background: var(--surface);
+    padding: 0.75rem 1.25rem;
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .scale-table td { padding: 0.65rem 1.25rem; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .scale-table tr:last-child td { border-bottom: none; }
+  .scale-table td:first-child { color: var(--text); }
+  .scale-table td.bad { color: var(--accent3); }
+  .scale-table tr:hover td { background: var(--surface); }
+
+  .pipeline {
+    margin: 3rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .pipeline-stage {
+    background: var(--bg);
+    padding: 2rem 2.5rem;
+    display: grid;
+    grid-template-columns: 2.5rem 1fr auto;
+    gap: 2rem;
+    align-items: start;
+    transition: background 0.2s;
+  }
+  .pipeline-stage:hover { background: var(--surface); }
+  .pipeline-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--border);
+    letter-spacing: 0.1em;
+    padding-top: 0.2rem;
+    transition: color 0.2s;
+  }
+  .pipeline-stage:hover .pipeline-num { color: var(--accent); }
+  .pipeline-stage-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.15rem;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .pipeline-stage-desc {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: none;
+    margin: 0;
+  }
+  .pipeline-stage-desc strong { color: var(--accent); font-weight: 500; }
+  .pipeline-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: flex-end;
+    min-width: 110px;
+  }
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .pipeline-connector {
+    background: var(--bg);
+    padding: 0.6rem 2.5rem 0.6rem calc(2.5rem + 2.5rem + 2rem);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    color: var(--border);
+  }
+  .dead-end {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent3);
+    padding: 1.5rem 2rem;
+    margin: 1.5rem 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  .dead-end-icon {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    white-space: nowrap;
+    padding-top: 0.1rem;
+  }
+  .dead-end p { font-size: 0.88rem; color: var(--muted); margin: 0; max-width: none; }
+  .dead-end p strong { color: var(--accent3); }
+  .callout {
+    border-left: 2px solid var(--accent);
+    padding: 1.5rem 2rem;
+    background: var(--surface);
+    margin: 2.5rem 0;
+  }
+  .callout p { color: var(--text); font-size: 0.95rem; margin: 0; max-width: none; }
+  .callout-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+  .callout.insight { border-left-color: var(--accent2); }
+  .callout.insight .callout-label { color: var(--accent2); }
+
+  .phase-results {
+    margin: 2rem 0;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .phase-results table { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 0.78rem; }
+  .phase-results th {
+    background: var(--surface);
+    padding: 0.75rem 1.25rem;
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .phase-results td { padding: 0.65rem 1.25rem; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .phase-results tr:last-child td { border-bottom: none; }
+  .phase-results td:first-child { color: var(--text); }
+  .phase-results td.good { color: var(--accent2); }
+  .phase-results td.dead { color: var(--accent3); }
+  .phase-results tr:hover td { background: var(--surface); }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+  .result-cell { background: var(--bg); padding: 2rem; }
+  .result-cell-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .result-cell-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.5rem;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .result-cell-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin: 0; max-width: none; }
+
+  .case-nav {
+    border-top: 1px solid var(--border);
+    padding: 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 5rem;
+  }
+  .case-nav-item { display: flex; flex-direction: column; gap: 0.4rem; text-decoration: none; max-width: 280px; }
+  .case-nav-item.next { align-items: flex-end; text-align: right; }
+  .case-nav-dir {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .case-nav-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--text);
+    transition: color 0.2s;
+  }
+  .case-nav-item:hover .case-nav-title { color: var(--accent); }
+
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.5rem; }
+    .case-hero { padding: 8rem 1.5rem 3rem; }
+    .case-content { padding: 0 1.5rem; }
+    .stat-bar { grid-template-columns: 1fr 1fr; margin: 0 1.5rem; }
+    .pipeline-stage { grid-template-columns: 1fr; gap: 1rem; }
+    .pipeline-tags { flex-direction: row; }
+    .result-grid { grid-template-columns: 1fr; }
+    .dead-end { grid-template-columns: 1fr; }
+    .case-nav { flex-direction: column; gap: 2rem; padding: 2rem 1.5rem; }
+    .case-nav-item.next { align-items: flex-start; text-align: left; }
+  }
+
+  .trace {
+    margin: 2rem 0;
+    border: 1px solid var(--border);
+  }
+  .trace-step {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+  .trace-step:last-child { border-bottom: none; }
+  .trace-label {
+    background: var(--surface);
+    padding: 1rem 1.25rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent2);
+  }
+  .trace-body {
+    padding: 1rem 1.25rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .trace-body b { color: var(--text); font-weight: 400; }
+  .phase-results { overflow-x: auto; }
+
+  @media (max-width: 768px) {
+    .trace-step { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-left">
+    <a href="index.html" class="nav-back">All work</a>
+    <a href="index.html" class="nav-name">Ashwin Nair</a>
+  </div>
+  <span class="nav-case-label">Case Study</span>
+</nav>
+
+<div class="case-hero">
+  <div class="case-eyebrow">National Library Board · 2026</div>
+  <h1 class="case-title">From Headline<br><em>to Authority</em><br>Record</h1>
+  <p class="case-subtitle">NLB's Thesaurus and Taxonomy Editor (TTE) holds about 1.8 million authority records. 52,437 of them name the people, organisations, places, events, awards and laws that Singapore's news reports on, each with a description a cataloguer wrote. Keeping them current with the news is routine work the volume has outgrown. This pipeline reads the news, proposes the changes, and a person decides every one.</p>
+</div>
+
+<div class="stat-bar">
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">298,790</div>
+    <div class="stat-bar-label">Articles read since 2015</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">48,696</div>
+    <div class="stat-bar-label">Entities extracted</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">9,844</div>
+    <div class="stat-bar-label">Changes proposed to existing records</div>
+  </div>
+  <div class="stat-bar-cell">
+    <div class="stat-bar-num">0</div>
+    <div class="stat-bar-label">Applied without a person</div>
+  </div>
+</div>
+
+<div class="case-content">
+
+  <div class="case-section reveal">
+    <div class="section-label">The Problem</div>
+    <h2>The news changes records faster than people can read it.</h2>
+    <p>An appointment, an award, a death, a merger, a rename: each one changes an authority record somewhere, and the cataloguers who keep TTE current find those changes by reading the news by hand. Three outlets alone - The Straits Times, Lianhe Zaobao and CNA - have published close to 300,000 articles since 2015, in English and Chinese, with Malay and Tamil feeds on top.</p>
+    <p>The scope had to be honest from the start. Comparing seven TTE snapshots from September 2024 to August 2026, only about <strong>12% of the team's record changes involve a name the news printed</strong> (nearer 19% once names buried in article bodies are counted). Most cataloguing is driven by books, corrections and bulk projects. The pipeline targets the news-driven slice, and its evaluation measures recall against that slice, not against everything the team does.</p>
+    <p>The constraints: one person building it, free tiers for everything (Supabase, Gemini, GitHub Actions, Cloudflare), article text read but never stored, and an authority file that no machine is allowed to write to.</p>
+    <div class="callout insight">
+      <div class="callout-label">Design principle</div>
+      <p>Recall early, precision late. A relevant article dropped at the first stage is lost silently and forever; a wrong proposal at the last stage is visible and costs a reviewer one click. So every stage is permissive relative to the one after it, and the expensive judgement happens last and least often.</p>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">The Approach</div>
+    <h2>Five automated stages, then a person</h2>
+    <p>Articles are collected from RSS feeds every two hours; the rest runs nightly on GitHub Actions. Each stage's queue is a column in Postgres, and nothing is marked done until its write succeeds, so a failed night leaves its work queued for the next. The same code ran once over the outlets' archives back to 2015.</p>
+    <div class="pipeline">
+      <div class="pipeline-stage">
+        <div class="pipeline-num">01</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">Relevance - headlines only</div>
+          <p class="pipeline-stage-desc">Gemini reads the title and summary, nothing else, in batches of 100, and returns only the articles that report a concrete change to a named Singapore entity. Batch size was measured, not guessed: on 548 articles, batches of 100 found 16 relevant where one batch of 548 found 6.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">Gemini</span>
+          <span class="tag">Batched</span>
+        </div>
+      </div>
+      <div class="pipeline-connector">↓ 28,090 judged relevant (9.4%)</div>
+      <div class="pipeline-stage">
+        <div class="pipeline-num">02</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">Extraction - one article at a time</div>
+          <p class="pipeline-stage-desc">The page is fetched in full, held in memory for seconds, and never stored. Gemini extracts every entity with a new fact, files each fact under TTE's own field names, and copies one sentence verbatim as evidence, with an English translation for Chinese, Malay and Tamil articles. Field names and the Occupation vocabulary are enforced in code rather than asked for in the prompt: a value filed under a near-miss name silently creates a new field.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">Gemini</span>
+          <span class="tag">Structured output</span>
+        </div>
+      </div>
+      <div class="pipeline-connector">↓ 48,696 entities</div>
+      <div class="pipeline-stage">
+        <div class="pipeline-num">03</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">Retrieval - no AI</div>
+          <p class="pipeline-stage-desc">Postgres trigram similarity over all 52,437 records, searched under both the name as printed and its romanised form, then re-ranked in code: a person recorded as dead more than a year before the article is dropped, and a candidate sharing an affiliation, award or birth year is promoted. Deliberately generous - its job is to get the right record into a shortlist of five, not to be right.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">pg_trgm</span>
+          <span class="tag">SQL</span>
+        </div>
+      </div>
+      <div class="pipeline-connector">↓ up to 5 candidates each</div>
+      <div class="pipeline-stage">
+        <div class="pipeline-num">04</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">Resolution - fields, not names</div>
+          <p class="pipeline-stage-desc">One call per article, because entities from the same article inform each other. Gemini decides whether each entity is one of its candidates, and for a match, makes the smallest edit to the existing record that carries the new fact. It rejected an exact 1.00 name match for a different Jacqueline Loh on her affiliation, and threw out a 0.35 near-miss pairing a community club with a public library.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">Gemini</span>
+          <span class="tag">Entity Resolution</span>
+        </div>
+      </div>
+      <div class="pipeline-connector">↓ 9,844 changes proposed · 22,331 entities not yet in TTE</div>
+      <div class="pipeline-stage">
+        <div class="pipeline-num">05</div>
+        <div class="pipeline-body">
+          <div class="pipeline-stage-title">Review - a person, one card at a time</div>
+          <p class="pipeline-stage-desc">An online desk deals each reviewer one record: first "is this the same entity?", then each change in turn - accept, edit the wording, or leave it out. Approved changes go to cataloguers as a weekly Excel sheet, and they apply them in TTE by hand. The pipeline's copy of the authority file is read-only; each new TTE export replaces it.</p>
+        </div>
+        <div class="pipeline-tags">
+          <span class="tag">Supabase</span>
+          <span class="tag">Cloudflare</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">One article, traced</div>
+    <h2>Gerard Ee steps down</h2>
+    <p>Article 2197, published 31 August 2026. Every panel below is what the system actually held.</p>
+    <div class="trace">
+      <div class="trace-step">
+        <div class="trace-label">1 · Relevance</div>
+        <div class="trace-body"><b>"Social service veteran Gerard Ee steps down as chairperson of Agency for Integrated Care"</b>
+→ relevant: Gerard Ee stepped down and Anita Fam was appointed chairperson of AIC.</div>
+      </div>
+      <div class="trace-step">
+        <div class="trace-label">2 · Extraction</div>
+        <div class="trace-body">3,817 characters read → 2 entities
+<b>Gerard Ee</b> · PERSON · Title: Dr · Occupation: Accountant
+evidence: "Gerard Ee, 77, is stepping down as chairperson of the Agency for Integrated Care"</div>
+      </div>
+      <div class="trace-step">
+        <div class="trace-label">3 · Retrieval</div>
+        <div class="trace-body"><b>1.00  Ee, Gerard</b>       18567994
+0.41  Clarke, Gerard   18578404   (dropped: too far below the best)</div>
+      </div>
+      <div class="trace-step">
+        <div class="trace-label">4 · Resolution</div>
+        <div class="trace-body"><b>MATCH_AND_UPDATE</b> → 18567994, confidence high
+APPEND  Affiliations: Agency for Integrated Care
+MERGE   Description: "...and Chairman of the Agency for Integrated Care from 2018 to 2026." (99% of the existing text kept)</div>
+      </div>
+      <div class="trace-step">
+        <div class="trace-label">5 · Review</div>
+        <div class="trace-body"><b>Is this the same person?</b>   [Same]  [Not this record]  [Keep for review]
+<b>Add this to Affiliations?</b>   [Accept]  [No change]  [Edit the wording]</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">Decisions, measured</div>
+    <h2>Every choice has a number behind it</h2>
+    <p>Each design choice was settled by a measurement on the pipeline's own data, and the repository's design notes record what was tried before it.</p>
+    <div class="phase-results">
+      <table>
+        <thead>
+          <tr><th>Decision</th><th>What was measured</th><th>Result</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Romanise every non-English name</td><td>Chinese entities matched to TTE</td><td class="good">40% → 77%</td></tr>
+          <tr><td>Re-rank candidates on fields</td><td>"Alan Chan": right record 4th at 0.47 behind three strangers</td><td class="good">4th → 1st; 30 dead candidates removed</td></tr>
+          <tr><td>Requeue only what an import changed</td><td>September TTE import, re-resolutions needed</td><td class="good">188 → 7</td></tr>
+          <tr><td>Generous retrieval floor (0.30)</td><td>Raising it to 0.60</td><td class="dead">Hit rate 80% → 43%</td></tr>
+          <tr><td>Resolve per article, not all at once</td><td>166 entities in one 154K-token call</td><td>36 s vs ~15 min, same answers; kept per-article for small contexts</td></tr>
+          <tr><td>Field names and vocabularies in code</td><td>1,550 prompt tokens per call</td><td class="good">Bad values rejected by construction</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="dead-end">
+      <div class="dead-end-icon">Dead end</div>
+      <p>Embeddings were tested as a replacement for trigram retrieval and rejected. <strong>gemini-embedding-001 scored two different people (王振胡 / 王振春) at 0.80, but the same person across languages (王振胡 / "Wong, Chin Hu") at only 0.68.</strong> A personal name carries almost no meaning to embed, and people are about 62% of what the pipeline extracts. Names do not tell people apart; their fields do.</p>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">The review desk</div>
+    <h2>Papers, Please - not Tinder</h2>
+    <p>A human in the loop is only real if the human can see enough to disagree. The first desk put the article and the record side by side with one question and a stamp, inspired by the border-inspector game <em>Papers, Please</em>. A first-time user said it felt like Tinder - the opposite of the intent. The redesign shows one card and one question: the news on top, then what the record says now, then what it will say if accepted. In October 2026, <strong>five cataloguers tried both versions side by side and chose the redesign</strong>.</p>
+    <p>Online, the database deals the records. Each reviewer holds one record at a time, a hold lapses after an hour idle, every decision is saved as it is made, and new news reopens a decided record for its new proposals only. Row-level security keeps the page's public key from reading anything, and new accounts wait for an admin's approval.</p>
+    <div class="callout insight">
+      <div class="callout-label">Could the person be removed?</div>
+      <p>Tested on stored data: a second model made every decision on 48 cards a reviewer had decided. It matched the reviewer on 16, in milliseconds against a median 33 seconds a card. Accepting the stored proposals unreviewed matched on 43 - so most of that gap was the model swap, and the five remaining misses were judgement calls. Taking the person out does not remove those decisions; it moves them into cut-offs nobody reviews. One reviewer, chosen cards: a pilot, not a verdict.</p>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">Outcome</div>
+    <h2>Running nightly since August 2026</h2>
+    <div class="result-grid">
+      <div class="result-cell">
+        <div class="result-cell-label">Articles read</div>
+        <div class="result-cell-value">298,790</div>
+        <p class="result-cell-desc">The three outlets' archives from 2015, plus the live feed since 3 August 2026. Figures as of 28 September 2026.</p>
+      </div>
+      <div class="result-cell">
+        <div class="result-cell-label">Proposals</div>
+        <div class="result-cell-value">9,844</div>
+        <p class="result-cell-desc">Changes to existing records, each anchored to a quoted sentence. A further 22,331 entities have no TTE record yet.</p>
+      </div>
+      <div class="result-cell">
+        <div class="result-cell-label">Running cost</div>
+        <div class="result-cell-value">Free tier</div>
+        <p class="result-cell-desc">Supabase, Gemini, GitHub Actions and Cloudflare. Paid access is estimated at under S$15 a month.</p>
+      </div>
+      <div class="result-cell">
+        <div class="result-cell-label">Published</div>
+        <div class="result-cell-value">IFLA AI 2026</div>
+        <p class="result-cell-desc"><em>Designing for the Reviewer: A Human-in-the-Loop AI Pipeline for News-Driven Knowledge Base Maintenance.</em> Forthcoming.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="case-section reveal">
+    <div class="section-label">Honest reflection</div>
+    <h2>What isn't known yet</h2>
+    <p>Can a person decide each proposal? Yes. Is each proposal correct, and does the desk save time? <strong>Not measured yet.</strong> The formal evaluation is planned as a three-month crossover: two cataloguers on the desk and two working by hand, swapping at six weeks, with labelled samples drawn from every year of the archive. With only 20 to 30 news-driven changes a quarter, recall will carry a wide interval, and it will be reported with that interval rather than as a bare percentage.</p>
+    <p>The romanisation that lifted Chinese matching is still a guess. 李全盛 was rendered "Lee, Choon Seng" - a real record, for a banker who died in 1966, at similarity 1.00. The resolver rejected him on his death year as designed, and the reviewer found the right man by search. Guessed spellings are now capped below certainty and marked on the card, but the next step - borrowing a matched record from a sibling article that shares an award or post - isn't built yet.</p>
+    <p>Not storing article text keeps the database small and the copyright position clean, but re-extracting after a prompt change means fetching pages again, and a page that has rotted or gone behind a paywall since is lost to the re-run.</p>
+  </div>
+
+</div>
+
+<div class="case-nav">
+  <a href="index.html" class="case-nav-item prev">
+    <span class="case-nav-dir">← Back</span>
+    <span class="case-nav-title">All work</span>
+  </a>
+  <a href="entity-resolution.html" class="case-nav-item next">
+    <span class="case-nav-dir">Next →</span>
+    <span class="case-nav-title">Entity Resolution at 1.45M Records</span>
+  </a>
+</div>
+
+<script>
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 40); });
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => { if (el.isIntersecting) { el.target.classList.add('visible'); observer.unobserve(el.target); } });
+  }, { threshold: 0.08 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
