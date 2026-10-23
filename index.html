@@ -580,7 +580,7 @@
     .hero-right { padding-top: 0; }
     section { padding: 4rem 1.5rem; }
     .work-item { grid-template-columns: 1fr; gap: 1.5rem; padding: 2rem 1.5rem; }
-    .work-tags { flex-direction: row; align-items: flex-start; }
+    .work-tags { flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
     .projects-grid { grid-template-columns: 1fr; }
     .project-card.full-width { grid-column: 1; }
     .beyond-grid { grid-template-columns: 1fr; }
@@ -631,7 +631,7 @@
         <div class="stat-label">RDF triples injected<br>into knowledge graph</div>
       </div>
       <div class="stat-cell">
-        <div class="stat-num">2</div>
+        <div class="stat-num">3</div>
         <div class="stat-label">Peer-reviewed<br>publications</div>
       </div>
     </div>
@@ -653,19 +653,39 @@
       </div>
       <div class="work-details">
         <ul class="work-bullets">
-          <li>Designed a three-phase entity resolution pipeline (MiniLM + FAISS + CatBoost) reconciling <strong>1.45M names against 12M records</strong> at <strong>93.9% F1</strong>, cutting manual updates by 90%. <a href="entity-resolution.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--border);">Case study →</a></li>
+          <li>Built an end-to-end AI workflow that reads Singapore news nightly, detects people and organisations whose details have changed, and proposes updates to the library's master name list. Chose models by replaying <strong>3,669 past decisions</strong>. <a href="entity-enrichment.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--border);">Case study →</a></li>
+          <li>Designed the human-in-the-loop review desk where librarians approve or reject each AI-proposed update. Supports concurrent reviewers; <strong>no change is written without human approval</strong>.</li>
+          <li>Designed a three-phase entity resolution pipeline (MiniLM + FAISS + string matching + CatBoost) reconciling <strong>1.45M names against 12M records</strong> at <strong>93.9% F1</strong>, cutting manual updates by 90%. <a href="entity-resolution.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--border);">Case study →</a></li>
           <li>Open-sourced <strong>warc2summary</strong>, a GPT-4o pipeline for Web Archive metadata generation. Token-reduction heuristics slashed API costs by <strong>99.9%</strong>. Validated with 8 cataloguers, led a 3-person team. <a href="warc2summary.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--border);">Case study →</a></li>
-          <li>Built a GPT-4 named-entity-linking pipeline that injected <strong>16K RDF triples</strong> into the NLB knowledge graph, improving cross-resource discovery. <a href="nel.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--border);">Case study →</a></li>
-          <li>Designed the <strong>KOS Pipeline</strong> - a semi-automated news monitoring system proposing structured, evidence-backed updates to NLB's knowledge base via BM25 entity linking and two-stage LLM calls.</li>
+          <li>Built a GPT-4 named-entity-linking pipeline that injected <strong>16K RDF triples</strong> into the NLB knowledge graph at <strong>0.975 precision</strong>, improving cross-resource discovery. <a href="nel.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--border);">Case study →</a></li>
         </ul>
       </div>
       <div class="work-tags">
         <span class="tag">PyTorch</span>
         <span class="tag">FAISS</span>
-        <span class="tag">BM25</span>
         <span class="tag">GPT-4o</span>
+        <span class="tag">Gemini</span>
+        <span class="tag">Supabase</span>
         <span class="tag">spaCy</span>
         <span class="tag">RDF</span>
+      </div>
+    </div>
+    <div class="work-item">
+      <div class="work-meta">
+        <div class="work-org">Georgia Institute of Technology</div>
+        <div class="work-title">Research Assistant · CS8903</div>
+        <div class="work-period">2026</div>
+      </div>
+      <div class="work-details">
+        <ul class="work-bullets">
+          <li><strong>DeepEgo 2.0</strong>, an independent study with industry partner Lockheed Martin (PI: Maria Konte). Built the data ingestion adapter and canonical normalisation layer for a multi-source dark-web and underground-forum threat-actor profiling pipeline: a provenance-tracked ingestion schema, <strong>SHA256-based stable entity deduplication</strong>, and an idempotent SQLite canonical store.</li>
+        </ul>
+      </div>
+      <div class="work-tags">
+        <span class="tag">Data Engineering</span>
+        <span class="tag">Entity Deduplication</span>
+        <span class="tag">SQLite</span>
+        <span class="tag">Threat Intelligence</span>
       </div>
     </div>
     <div class="work-item">
@@ -698,20 +718,22 @@
 
     <div class="project-card full-width">
       <div class="project-eyebrow">NLB · Production</div>
-      <div class="project-name">KOS Pipeline - Automated Knowledge Base Population</div>
+      <div class="project-name">Automated Entity Enrichment - News-Driven Authority Updates</div>
       <div class="project-desc">
-        A semi-automated pipeline that reads Singapore news articles and proposes structured, evidence-backed updates to NLB's knowledge organisation system. Articles are classified, BM25-indexed against the full TTE controlled vocabulary, then passed through a two-stage LLM call that extracts structured facts and links them to existing entities. Every proposed change traces to an exact sentence in the source. <strong>9,057 event updates and 2,319 new entity candidates</strong> in the current review queue - no writes without human approval.
+        A nightly pipeline that reads Singapore news in English, Chinese, Malay and Tamil, picks out articles that change a person or organisation in NLB's authority file, extracts each new fact with a verbatim evidence sentence, and resolves the entity against 52K records. Retrieval is deliberately generous (Postgres trigram search, re-ranked on shared affiliations, awards and death dates); Gemini then decides identity on fields, not names. Embeddings were tested and rejected - they scored two different people closer than one person across languages - while romanised names lifted Chinese match rates from 40% to 77%. Librarians decide every proposal on an online review desk, one record at a time with concurrent reviewers, and approved changes go to cataloguers as a weekly sheet: <strong>nothing is written to the authority file by a machine</strong>. Run over <strong>298,790 articles</strong> since 2015. Paper forthcoming at IFLA AI 2026.
       </div>
       <div class="project-footer">
         <div class="project-tags">
-          <span class="tag">BM25</span>
-          <span class="tag">LLM Pipelines</span>
-          <span class="tag">Entity Linking</span>
-          <span class="tag">Streamlit</span>
-          <span class="tag">Knowledge Graphs</span>
+          <span class="tag">Gemini</span>
+          <span class="tag">pg_trgm</span>
+          <span class="tag">Entity Resolution</span>
+          <span class="tag">Supabase</span>
+          <span class="tag">GitHub Actions</span>
+          <span class="tag">Human-in-the-Loop</span>
         </div>
         <div style="display:flex;gap:1rem;align-items:center;">
-          <a href="https://tte-kos.streamlit.app/" target="_blank" class="project-link">Live demo →</a>
+          <a href="entity-enrichment.html" class="project-link">Case study →</a>
+          <a href="https://github.com/reversingentropy/automated-entity-enrichment" target="_blank" class="project-link">GitHub →</a>
         </div>
       </div>
     </div>
@@ -726,7 +748,7 @@
         <div class="project-tags">
           <span class="tag">MiniLM</span>
           <span class="tag">FAISS</span>
-          <span class="tag">XGBoost</span>
+          <span class="tag">CatBoost</span>
           <span class="tag">PostgreSQL</span>
         </div>
         <a href="entity-resolution.html" class="project-link">Case study →</a>
@@ -795,6 +817,21 @@
   </div>
   <div class="pubs-list reveal">
     <div class="pub-item">
+      <div class="pub-year">2026</div>
+      <div class="pub-info">
+        <div class="pub-title">Designing for the Reviewer: A Human-in-the-Loop AI Pipeline for News-Driven Knowledge Base Maintenance at the National Library and Archives Board</div>
+        <div class="pub-venue">IFLA AI 2026 Conference · Nair, A. · Forthcoming</div>
+      </div>
+    </div>
+    <div class="pub-item">
+      <div class="pub-year">2026</div>
+      <div class="pub-info">
+        <div class="pub-title">Connecting the Dots: A Semantic Web Solution for Enhanced Library Resource Discovery</div>
+        <div class="pub-venue">Information Technology and Libraries, 45(1) · Ee, M. H., Nair, A., & Dresel, R.</div>
+      </div>
+      <a href="https://doi.org/10.5860/ital.v45i1.17462" target="_blank" class="pub-link">DOI →</a>
+    </div>
+    <div class="pub-item">
       <div class="pub-year">2025</div>
       <div class="pub-info">
         <div class="pub-title">Web Archives Metadata Generation with GPT-4o: Challenges and Insights</div>
@@ -806,7 +843,7 @@
       <div class="pub-year">2024</div>
       <div class="pub-info">
         <div class="pub-title">Metadata Enrichment with Named Entity Recognition using GPT-4</div>
-        <div class="pub-venue">International Conference on Dublin Core and Metadata Applications · Nair, A., Min Hoon, E., & Dresel, R.</div>
+        <div class="pub-venue">International Conference on Dublin Core and Metadata Applications · Nair, A., Ee, M. H., & Dresel, R.</div>
       </div>
       <a href="https://doi.org/10.23106/dcmi.952445840" target="_blank" class="pub-link">DOI →</a>
     </div>
@@ -823,7 +860,7 @@
     <div class="beyond-card">
       <span class="beyond-icon">🎓</span>
       <div class="beyond-title">Georgia Tech OMSCS</div>
-      <div class="beyond-desc">Enrolled in Georgia Tech's Online Master of Science in Computer Science, pursuing the degree part-time across 2026–2029. Currently in CS6601 (Artificial Intelligence).</div>
+      <div class="beyond-desc">Enrolled in Georgia Tech's Online Master of Science in Computer Science, pursuing the degree part-time across 2026–2029 with an AI concentration. Completed CS6601 (Artificial Intelligence), CS6795 (Intro to Cognitive Science) and CS8903 (Special Problems). Currently in CS7280 (Network Science) and CS7496 (Computer Animation).</div>
     </div>
     <div class="beyond-card">
       <span class="beyond-icon">📚</span>
