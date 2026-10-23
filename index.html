@@ -663,7 +663,6 @@
       <div class="work-tags">
         <span class="tag">PyTorch</span>
         <span class="tag">FAISS</span>
-        <span class="tag">BM25</span>
         <span class="tag">GPT-4o</span>
         <span class="tag">Gemini</span>
         <span class="tag">Supabase</span>
@@ -721,12 +720,12 @@
       <div class="project-eyebrow">NLB · Production</div>
       <div class="project-name">Automated Entity Enrichment - News-Driven Authority Updates</div>
       <div class="project-desc">
-        A scheduled pipeline that reads Singapore news nightly, decides which articles imply a change to a person or organisation in NLB's authority file, extracts the entities involved and resolves them against existing records. Each proposal goes to a librarian on a review desk, one record at a time, with concurrent reviewers sharing the queue - <strong>nothing is written to the authority file by a machine</strong>. Run over The Straits Times, Lianhe Zaobao and CNA archives from 2015: <strong>298,790 articles</strong> collected and <strong>48,696 entities</strong> extracted as of September 2026. Models chosen by replaying 3,669 past decisions. Paper forthcoming at IFLA AI 2026.
+        A nightly pipeline that reads Singapore news in English, Chinese, Malay and Tamil, picks out articles that change a person or organisation in NLB's authority file, extracts each new fact with a verbatim evidence sentence, and resolves the entity against 52K records. Retrieval is deliberately generous (Postgres trigram search, re-ranked on shared affiliations, awards and death dates); Gemini then decides identity on fields, not names. Embeddings were tested and rejected - they scored two different people closer than one person across languages - while romanised names lifted Chinese match rates from 40% to 77%. Librarians decide every proposal on an online review desk, one record at a time with concurrent reviewers, and approved changes go to cataloguers as a weekly sheet: <strong>nothing is written to the authority file by a machine</strong>. Run over <strong>298,790 articles</strong> since 2015. Paper forthcoming at IFLA AI 2026.
       </div>
       <div class="project-footer">
         <div class="project-tags">
           <span class="tag">Gemini</span>
-          <span class="tag">LLM Pipelines</span>
+          <span class="tag">pg_trgm</span>
           <span class="tag">Entity Resolution</span>
           <span class="tag">Supabase</span>
           <span class="tag">GitHub Actions</span>
